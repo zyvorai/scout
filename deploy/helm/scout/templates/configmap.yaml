@@ -1,0 +1,15 @@
+{{- if not .Values.inventory.existingConfigMap }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "scout.fullname" . }}-inventory
+  labels:
+    {{- include "scout.labels" . | nindent 4 }}
+data:
+  {{ .Values.inventory.fileName }}: |
+{{- if .Values.inventory.json }}
+{{ .Values.inventory.json | nindent 4 }}
+{{- else }}
+{{ .Files.Get "files/sample-inventory.json" | nindent 4 }}
+{{- end }}
+{{- end }}

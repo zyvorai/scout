@@ -1,0 +1,22 @@
+[Unit]
+Description=Zyvor Scout migration assessment dashboard
+Documentation=https://github.com/zyvorai/scout
+After=network.target
+
+[Service]
+Type=simple
+EnvironmentFile=-/etc/scout/scout.env
+ExecStart=/usr/local/bin/scout serve --file ${SCOUT_INVENTORY} --addr ${SCOUT_ADDR}
+Restart=on-failure
+RestartSec=5s
+DynamicUser=yes
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadOnlyPaths=/etc/scout
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=scout
+
+[Install]
+WantedBy=multi-user.target

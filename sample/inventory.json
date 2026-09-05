@@ -1,0 +1,376 @@
+{
+  "generatedAt": "2026-09-05T20:04:55.885269723Z",
+  "source": "demo",
+  "environment": "Northstar Production",
+  "vms": [
+    {
+      "id": "vm-101",
+      "name": "sap-app-01",
+      "os": "RHEL 9.4",
+      "cpus": 8,
+      "memoryMiB": 16384,
+      "powerState": "POWERED_ON",
+      "firmware": "uefi",
+      "secureBoot": true,
+      "tpm": false,
+      "encrypted": false,
+      "snapshots": 1,
+      "toolsStatus": "running",
+      "gpu": false,
+      "sriov": false,
+      "usbPassthrough": false,
+      "pciPassthrough": false,
+      "sharedDisks": false,
+      "rdm": false,
+      "disks": [
+        {
+          "id": "disk-1",
+          "sizeGiB": 180,
+          "format": "vmdk",
+          "shared": false,
+          "rdm": false,
+          "datastore": "vsan-prod"
+        }
+      ],
+      "nics": [
+        {
+          "id": "nic-1",
+          "network": "prod-app",
+          "ip": "10.40.1.21",
+          "vlan": 401,
+          "sriov": false
+        }
+      ]
+    },
+    {
+      "id": "vm-102",
+      "name": "postgres-01",
+      "os": "Ubuntu 24.04 LTS",
+      "cpus": 16,
+      "memoryMiB": 32768,
+      "powerState": "POWERED_ON",
+      "firmware": "uefi",
+      "secureBoot": true,
+      "tpm": false,
+      "encrypted": false,
+      "snapshots": 2,
+      "toolsStatus": "running",
+      "gpu": false,
+      "sriov": false,
+      "usbPassthrough": false,
+      "pciPassthrough": false,
+      "sharedDisks": false,
+      "rdm": false,
+      "disks": [
+        {
+          "id": "disk-1",
+          "sizeGiB": 80,
+          "format": "vmdk",
+          "shared": false,
+          "rdm": false,
+          "datastore": "vsan-prod"
+        },
+        {
+          "id": "disk-2",
+          "sizeGiB": 600,
+          "format": "vmdk",
+          "shared": false,
+          "rdm": false,
+          "datastore": "vsan-db"
+        }
+      ],
+      "nics": [
+        {
+          "id": "nic-1",
+          "network": "prod-db",
+          "ip": "10.40.2.15",
+          "vlan": 402,
+          "sriov": false
+        }
+      ]
+    },
+    {
+      "id": "vm-103",
+      "name": "redis-01",
+      "os": "Ubuntu 24.04 LTS",
+      "cpus": 4,
+      "memoryMiB": 8192,
+      "powerState": "POWERED_ON",
+      "firmware": "uefi",
+      "secureBoot": false,
+      "tpm": false,
+      "encrypted": false,
+      "snapshots": 0,
+      "toolsStatus": "running",
+      "gpu": false,
+      "sriov": false,
+      "usbPassthrough": false,
+      "pciPassthrough": false,
+      "sharedDisks": false,
+      "rdm": false,
+      "disks": [
+        {
+          "id": "disk-1",
+          "sizeGiB": 60,
+          "format": "vmdk",
+          "shared": false,
+          "rdm": false,
+          "datastore": "vsan-prod"
+        }
+      ],
+      "nics": [
+        {
+          "id": "nic-1",
+          "network": "prod-cache",
+          "ip": "10.40.3.12",
+          "vlan": 403,
+          "sriov": false
+        }
+      ]
+    },
+    {
+      "id": "vm-104",
+      "name": "windows-ad-01",
+      "os": "Windows Server 2022",
+      "cpus": 4,
+      "memoryMiB": 8192,
+      "powerState": "POWERED_ON",
+      "firmware": "uefi",
+      "secureBoot": true,
+      "tpm": true,
+      "encrypted": false,
+      "snapshots": 4,
+      "toolsStatus": "running",
+      "gpu": false,
+      "sriov": false,
+      "usbPassthrough": false,
+      "pciPassthrough": false,
+      "sharedDisks": false,
+      "rdm": false,
+      "disks": [
+        {
+          "id": "disk-1",
+          "sizeGiB": 120,
+          "format": "vmdk",
+          "shared": false,
+          "rdm": false,
+          "datastore": "vsan-prod"
+        }
+      ],
+      "nics": [
+        {
+          "id": "nic-1",
+          "network": "prod-core",
+          "ip": "10.40.10.10",
+          "vlan": 410,
+          "sriov": false
+        }
+      ]
+    },
+    {
+      "id": "vm-105",
+      "name": "sql-prod-01",
+      "os": "Windows Server 2019",
+      "cpus": 16,
+      "memoryMiB": 65536,
+      "powerState": "POWERED_ON",
+      "firmware": "uefi",
+      "secureBoot": true,
+      "tpm": true,
+      "encrypted": false,
+      "snapshots": 14,
+      "toolsStatus": "running",
+      "gpu": false,
+      "sriov": false,
+      "usbPassthrough": false,
+      "pciPassthrough": false,
+      "sharedDisks": true,
+      "rdm": true,
+      "disks": [
+        {
+          "id": "disk-1",
+          "sizeGiB": 160,
+          "format": "vmdk",
+          "shared": false,
+          "rdm": false,
+          "datastore": "vsan-prod"
+        },
+        {
+          "id": "rdm-1",
+          "sizeGiB": 1200,
+          "format": "rdm",
+          "shared": true,
+          "rdm": true,
+          "datastore": "san-lun-14"
+        }
+      ],
+      "nics": [
+        {
+          "id": "nic-1",
+          "network": "prod-db",
+          "ip": "10.40.2.20",
+          "vlan": 402,
+          "sriov": false
+        }
+      ]
+    },
+    {
+      "id": "vm-106",
+      "name": "gpu-worker-01",
+      "os": "Ubuntu 24.04 LTS",
+      "cpus": 24,
+      "memoryMiB": 131072,
+      "powerState": "POWERED_ON",
+      "firmware": "uefi",
+      "secureBoot": false,
+      "tpm": false,
+      "encrypted": false,
+      "snapshots": 0,
+      "toolsStatus": "running",
+      "gpu": true,
+      "sriov": true,
+      "usbPassthrough": false,
+      "pciPassthrough": true,
+      "sharedDisks": false,
+      "rdm": false,
+      "disks": [
+        {
+          "id": "disk-1",
+          "sizeGiB": 300,
+          "format": "vmdk",
+          "shared": false,
+          "rdm": false,
+          "datastore": "nvme-gpu"
+        }
+      ],
+      "nics": [
+        {
+          "id": "nic-1",
+          "network": "ai-fabric",
+          "ip": "10.41.1.31",
+          "vlan": 501,
+          "sriov": true
+        }
+      ]
+    },
+    {
+      "id": "vm-107",
+      "name": "legacy-erp-01",
+      "os": "CentOS 6.10",
+      "cpus": 4,
+      "memoryMiB": 8192,
+      "powerState": "POWERED_ON",
+      "firmware": "bios",
+      "secureBoot": false,
+      "tpm": false,
+      "encrypted": false,
+      "snapshots": 7,
+      "toolsStatus": "outdated",
+      "gpu": false,
+      "sriov": false,
+      "usbPassthrough": false,
+      "pciPassthrough": false,
+      "sharedDisks": false,
+      "rdm": false,
+      "disks": [
+        {
+          "id": "disk-1",
+          "sizeGiB": 240,
+          "format": "vmdk",
+          "shared": false,
+          "rdm": false,
+          "datastore": "legacy-san"
+        }
+      ],
+      "nics": [
+        {
+          "id": "nic-1",
+          "network": "legacy-app",
+          "ip": "10.42.1.18",
+          "vlan": 601,
+          "sriov": false
+        }
+      ]
+    },
+    {
+      "id": "vm-108",
+      "name": "api-gw-01",
+      "os": "RHEL 9.4",
+      "cpus": 4,
+      "memoryMiB": 8192,
+      "powerState": "POWERED_ON",
+      "firmware": "uefi",
+      "secureBoot": true,
+      "tpm": false,
+      "encrypted": false,
+      "snapshots": 0,
+      "toolsStatus": "running",
+      "gpu": false,
+      "sriov": false,
+      "usbPassthrough": false,
+      "pciPassthrough": false,
+      "sharedDisks": false,
+      "rdm": false,
+      "disks": [
+        {
+          "id": "disk-1",
+          "sizeGiB": 80,
+          "format": "vmdk",
+          "shared": false,
+          "rdm": false,
+          "datastore": "vsan-prod"
+        }
+      ],
+      "nics": [
+        {
+          "id": "nic-1",
+          "network": "prod-edge",
+          "ip": "10.40.20.4",
+          "vlan": 420,
+          "sriov": false
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "vm-101",
+      "to": "vm-102",
+      "protocol": "tcp",
+      "port": 5432,
+      "bytes": 82910402
+    },
+    {
+      "from": "vm-101",
+      "to": "vm-103",
+      "protocol": "tcp",
+      "port": 6379,
+      "bytes": 12900320
+    },
+    {
+      "from": "vm-101",
+      "to": "vm-108",
+      "protocol": "tcp",
+      "port": 443,
+      "bytes": 9912033
+    },
+    {
+      "from": "vm-105",
+      "to": "vm-104",
+      "protocol": "tcp",
+      "port": 389,
+      "bytes": 920031
+    },
+    {
+      "from": "vm-108",
+      "to": "vm-104",
+      "protocol": "tcp",
+      "port": 53,
+      "bytes": 330021
+    }
+  ],
+  "metadata": {
+    "collector": "scout",
+    "datacenter": "DC-PUNE-01"
+  }
+}

@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#ff5a15">
+  <title>Zyvor Scout — Migration Readiness</title>
+  <link rel="icon" href="/zyvor-mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="nav-wrap">
+      <a class="brand" href="#overview" aria-label="Zyvor Scout home">
+        <img class="brand-mark" src="/zyvor-mark.svg" width="28" height="28" alt="">
+        <span class="brand-word"><span class="brand-zyvor">zyvor</span> Scout</span>
+      </a>
+      <nav aria-label="Primary">
+        <a href="#overview">Overview</a>
+        <a href="#inventory">Inventory</a>
+        <a href="#dependencies">Dependencies</a>
+        <a href="#waves">Waves</a>
+      </nav>
+      <a class="nav-action" href="/api/v1/report" target="_blank" rel="noopener">Open report</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" id="overview">
+      <div class="eyebrow">ZYVOR SCOUT</div>
+      <h1>Know what will move.<br><span>Before you move it.</span></h1>
+      <p class="hero-copy">Migration discovery and readiness for virtual infrastructure. Scout finds blockers, maps dependencies, and turns an estate into executable migration waves.</p>
+      <div class="hero-actions">
+        <a class="button primary" href="#inventory">Explore assessment</a>
+        <a class="button secondary" href="/api/v1/report" target="_blank" rel="noopener">Generate report ↗</a>
+      </div>
+      <div class="hero-orb" aria-hidden="true"><div class="orb-core" id="heroScore">—</div><div class="orb-label">readiness</div></div>
+    </section>
+
+    <section class="stats-shell" aria-label="Migration summary">
+      <div class="stat"><span class="stat-value" id="totalVMs">—</span><span class="stat-label">Virtual machines</span></div>
+      <div class="stat"><span class="stat-value" id="readyVMs">—</span><span class="stat-label">Ready</span></div>
+      <div class="stat"><span class="stat-value" id="reviewVMs">—</span><span class="stat-label">Need review</span></div>
+      <div class="stat"><span class="stat-value" id="blockedVMs">—</span><span class="stat-label">Blocked</span></div>
+      <div class="stat"><span class="stat-value" id="wavesCount">—</span><span class="stat-label">Migration waves</span></div>
+    </section>
+
+    <section class="section" id="inventory">
+      <div class="section-head">
+        <div><div class="eyebrow">READINESS</div><h2>Every workload.<br>One clear answer.</h2></div>
+        <p>Scores are explainable. Every deduction links to a concrete compatibility finding and a recommended remediation step.</p>
+      </div>
+      <div class="toolbar">
+        <label class="search"><span aria-hidden="true">⌕</span><input id="searchInput" type="search" placeholder="Search workloads" autocomplete="off"></label>
+        <div class="segmented" role="group" aria-label="Filter by status">
+          <button class="segment active" data-filter="all">All</button>
+          <button class="segment" data-filter="ready">Ready</button>
+          <button class="segment" data-filter="review">Review</button>
+          <button class="segment" data-filter="blocked">Blocked</button>
+        </div>
+      </div>
+      <div class="inventory-card">
+        <div class="table-head"><span>Workload</span><span>Score</span><span>Status</span><span>Wave</span><span>Findings</span></div>
+        <div id="inventoryRows" class="table-body" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section class="dark-section" id="dependencies">
+      <div class="dark-inner">
+        <div class="section-head inverse">
+          <div><div class="eyebrow">DEPENDENCIES</div><h2>Move applications.<br>Not isolated VMs.</h2></div>
+          <p>Observed workload relationships become migration groups, reducing the risk of moving one tier without the services it depends on.</p>
+        </div>
+        <div class="graph-card">
+          <svg id="dependencyGraph" viewBox="0 0 1000 520" role="img" aria-label="VM dependency graph"></svg>
+          <div class="graph-legend"><span><i class="dot ready-dot"></i>Ready</span><span><i class="dot review-dot"></i>Review</span><span><i class="dot blocked-dot"></i>Blocked</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="waves">
+      <div class="section-head">
+        <div><div class="eyebrow">MIGRATION WAVES</div><h2>From inventory<br>to execution plan.</h2></div>
+        <p>Connected, non-blocked workloads are grouped together. Blocked workloads stay out of the plan until their findings are remediated.</p>
+      </div>
+      <div id="waveGrid" class="wave-grid"></div>
+    </section>
+
+    <section class="cta-section">
+      <div class="cta-card">
+        <img class="cta-mark" src="/zyvor-mark.svg" width="44" height="44" alt="">
+        <div class="eyebrow">NEXT STEP</div>
+        <h2>Scout finds the path.<br>Transiva executes it.</h2>
+        <p>Use the open assessment as the shared source of truth for planning, remediation, and migration execution.</p>
+        <a class="button primary" href="https://zyvor.dev" target="_blank" rel="noopener">Explore zyvor.dev ↗</a>
+      </div>
+    </section>
+  </main>
+
+  <aside class="drawer" id="drawer" aria-hidden="true">
+    <button class="drawer-close" id="drawerClose" aria-label="Close details">×</button>
+    <div id="drawerContent"></div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+
+  <footer>
+    <a class="footer-brand" href="https://zyvor.dev" target="_blank" rel="noopener">
+      <img src="/zyvor-mark.svg" width="18" height="18" alt="">
+      <span>© 2026 Zyvor AI Labs</span>
+    </a>
+    <span>Scout · Apache-2.0 · Read-only by design</span>
+  </footer>
+  <script src="/app.js" defer></script>
+</body>
+</html>

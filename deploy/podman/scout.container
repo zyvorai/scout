@@ -1,0 +1,39 @@
+# Quadlet unit for rootful or rootless Podman.
+# Install (rootful example):
+#   sudo cp deploy/podman/scout.container /etc/containers/systemd/
+#   sudo mkdir -p /etc/scout && sudo cp sample/inventory.json /etc/scout/inventory.json
+#   sudo systemctl daemon-reload
+#   sudo systemctl start scout
+#
+# Rootless: copy to ~/.config/containers/systemd/ and use systemctl --user.
+#
+# Build/pull the image first:
+#   podman build -t ghcr.io/zyvorai/scout:0.1.0 .
+#   # or: podman pull ghcr.io/zyvorai/scout:0.1.0
+
+[Unit]
+Description=Zyvor Scout migration assessment dashboard
+Documentation=https://github.com/zyvorai/scout
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=ghcr.io/zyvorai/scout:0.1.0
+ContainerName=scout
+PublishPort=18447:18447
+Volume=/etc/scout/inventory.json:/data/inventory.json:ro
+Exec=serve --file /data/inventory.json --addr :18447
+ReadOnly=true
+User=65532
+Group=65532
+AddCapability=
+DropCapability=ALL
+NoNewPrivileges=true
+Environment=HOME=/tmp
+
+[Service]
+Restart=on-failure
+TimeoutStartSec=90
+
+[Install]
+WantedBy=multi-user.target default.target

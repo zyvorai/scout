@@ -1,0 +1,29 @@
+# Compose file for Docker Compose v2 and Podman Compose.
+#   docker compose up --build
+#   podman compose up --build
+#   ./scripts/container.sh up --build
+#
+# Rootless Podman tips:
+#   - Prefer ./scripts/container.sh run (stages a 0644 inventory + :z + keep-id)
+#   - Override host publish with SCOUT_PORT if 18447 is taken
+#   - Ensure inventory files are world-readable if mounting without keep-id
+
+services:
+  scout:
+    build: .
+    image: ghcr.io/zyvorai/scout:0.1.0
+    container_name: scout
+    command: ["serve", "--file", "/data/inventory.json", "--addr", ":18447"]
+    ports:
+      - "${SCOUT_PORT:-18447}:18447"
+    volumes:
+      - ${SCOUT_INVENTORY_DIR:-./sample}:/data:ro,z
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    # Distroless nonroot UID. For rootless Podman + private inventory files,
+    # use: ./scripts/container.sh run (keep-id) instead of compose.
+    user: "65532:65532"
+    restart: unless-stopped

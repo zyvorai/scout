@@ -1,0 +1,33 @@
+# Optional. Enable with: kubectl apply -f ingress.yaml
+# Require TLS and edge auth before exposing beyond the cluster.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: scout
+  namespace: scout
+  labels:
+    app.kubernetes.io/name: scout
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    # Create the secret first:
+    #   htpasswd -nbB scout 'change-me' | kubectl -n scout create secret generic scout-basic-auth --from-file=auth=/dev/stdin
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: scout-basic-auth
+    nginx.ingress.kubernetes.io/auth-realm: "Zyvor Scout"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - scout.example.com
+      secretName: scout-tls
+  rules:
+    - host: scout.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: scout
+                port:
+                  number: 18447

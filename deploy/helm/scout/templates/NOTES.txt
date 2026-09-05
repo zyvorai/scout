@@ -1,0 +1,11 @@
+1. Scout dashboard: http://{{ include "scout.fullname" . }}.{{ .Release.Namespace }}.svc:{{ .Values.service.port }}/
+2. Health: GET /api/v1/healthz
+3. Inventory file: {{ include "scout.inventoryFile" . }}
+
+Scout is read-only assessment. Do not expose the Service or Ingress without TLS and authentication.
+
+Port-forward for a quick check:
+
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "scout.fullname" . }} {{ .Values.service.port }}:{{ .Values.service.port }}
+
+Then open http://127.0.0.1:{{ .Values.service.port }}/

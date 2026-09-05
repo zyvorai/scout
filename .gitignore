@@ -1,0 +1,10 @@
+.deploy-last
+.container-inventory.json
+bin/
+dist/
+coverage.out
+report.html
+scout.json
+*.pem
+*.key
+.DS_Store

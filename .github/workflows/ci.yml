@@ -1,0 +1,30 @@
+name: ci
+on:
+  push:
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.x'
+          cache: true
+      - run: go mod download
+      - name: gofmt
+        run: |
+          unformatted="$(gofmt -l $(find . -name '*.go' -type f))"
+          if [ -n "$unformatted" ]; then
+            echo "Unformatted Go files:" >&2
+            echo "$unformatted" >&2
+            exit 1
+          fi
+      - run: go test ./...
+      - run: go vet ./...
+      - run: go build -o bin/scout ./cmd/scout
+      - name: smoke demo
+        run: |
+          ./bin/scout scan --source demo --out scout.json
+          ./bin/scout assess --file scout.json >/dev/null
+          ./bin/scout report --file scout.json --out report.html
