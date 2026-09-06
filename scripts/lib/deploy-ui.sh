@@ -193,6 +193,7 @@ deploy_ui_save_deploy_last() {
 HOST=$host
 USER=$user
 MODE=$mode
+PORT=${DEPLOY_UI_PORT:-}
 UPDATED=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
 VERSION=${version:-unknown}
 COMMIT=${commit:-unknown}

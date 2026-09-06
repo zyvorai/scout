@@ -37,10 +37,10 @@ button,input{font:inherit}
   border-bottom:1px solid rgba(204,66,10,.08);
 }
 .nav-wrap{height:52px;max-width:1180px;margin:auto;padding:0 24px;display:flex;align-items:center;gap:30px}
-.brand{display:flex;align-items:center;gap:10px;font-weight:720;letter-spacing:-.02em}
-.brand-mark{display:block;border-radius:7px;box-shadow:0 4px 14px rgba(255,90,21,.28)}
+.brand{display:flex;align-items:center;gap:8px;font-weight:720;letter-spacing:-.02em}
+.brand-mark{display:block;flex:0 0 auto}
 .brand-word{font-size:15px;letter-spacing:-.03em}
-.brand-zyvor{font-weight:800;color:var(--accent-deep);margin-right:.22em}
+.brand-zyvor{font-weight:800;color:#ff5a15;margin-right:.22em}
 nav{display:flex;gap:27px;margin-left:auto}
 nav a{font-size:12px;color:#3d3834}
 .nav-action{font-size:12px;font-weight:650;color:var(--accent-text)}

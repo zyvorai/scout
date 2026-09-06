@@ -49,7 +49,7 @@ kustomize-build:
 	kubectl kustomize deploy/k8s >/dev/null
 
 smoke:
-	./scripts/smoke-remote.sh
+	./scripts/smoke-remote.sh $(ARGS)
 
 deploy-remote:
 	./scripts/deploy-remote.sh $(ARGS)

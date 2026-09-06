@@ -74,9 +74,12 @@ Rootless: install the unit under `~/.config/containers/systemd/` and use `system
 Same pattern as Chimera: cross-compile locally, install over SSH, start `scout.service`, then smoke-test the live URL. No Go toolchain on the target.
 
 ```bash
-./scripts/deploy-remote.sh 212.8.248.187 sus
-SCOUT_INVENTORY_SRC=./scout.json ./scripts/deploy-remote.sh 212.8.248.187 sus
-SCOUT_URL=http://212.8.248.187:18447 ./scripts/smoke-remote.sh
+./scripts/deploy-remote.sh 212.8.248.187 sus --port 19726
+SCOUT_PORT=19726 ./scripts/deploy-remote.sh 212.8.248.187 sus
+SCOUT_INVENTORY_SRC=./scout.json ./scripts/deploy-remote.sh 212.8.248.187 sus --port 19726
+# Omit port → reuse .deploy-last PORT, else pick random 18000–28999
+./scripts/smoke-remote.sh --port 19726
+SCOUT_URL=http://212.8.248.187:19726 ./scripts/smoke-remote.sh
 ./scripts/deploy-remote.sh 212.8.248.187 sus --uninstall
 ```
 

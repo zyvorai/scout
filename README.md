@@ -162,10 +162,13 @@ make container-up
 # or: ./scripts/container.sh up --build
 
 # Remote systemd (cross-compile + SSH + smoke)
-./scripts/deploy-remote.sh <host> [user]
+./scripts/deploy-remote.sh <host> [user] --port 19726
+# Or: SCOUT_PORT=19726 ./scripts/deploy-remote.sh <host> [user]
+# Omit port → reuse .deploy-last PORT, else pick random 18000–28999
 
 # Smoke an existing instance
-SCOUT_URL=http://<host>:18447 ./scripts/smoke-remote.sh
+SCOUT_URL=http://<host>:19726 ./scripts/smoke-remote.sh
+./scripts/smoke-remote.sh --port 19726
 
 # Kubernetes
 kubectl apply -k deploy/k8s
