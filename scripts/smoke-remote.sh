@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-# Copyright 2026 Zyvor AI Labs
+# Copyright 2026 Zyvor AI Labs · https://zyvor.dev
 # SPDX-License-Identifier: Apache-2.0
-# ============================================================================
 # smoke-remote.sh — Verify a running Scout instance (local or remote)
 # ============================================================================
 # Checks healthz, summary, assessments, inventory, and the HTML dashboard.
