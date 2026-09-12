@@ -1,8 +1,4 @@
----
-hero:
-  eyebrow: ROADMAP
-  title: Roadmap
----
+# Roadmap
 
 This roadmap describes likely open-source work and is not a release commitment.
 
