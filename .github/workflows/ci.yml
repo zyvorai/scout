@@ -28,3 +28,20 @@ jobs:
           ./bin/scout scan --source demo --out scout.json
           ./bin/scout assess --file scout.json >/dev/null
           ./bin/scout report --file scout.json --out report.html
+
+  website:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+
+      - name: Install dependencies
+        run: cd website && npm ci
+
+      - name: Build
+        run: cd website && npm run build
