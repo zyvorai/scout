@@ -8,3 +8,7 @@ scout.json
 *.pem
 *.key
 .DS_Store
+
+# MkDocs
+site/
+__pycache__/

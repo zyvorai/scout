@@ -1,0 +1,50 @@
+site_name: Zyvor Scout
+site_description: Migration discovery and readiness before migration risk.
+site_url: https://zyvorai.github.io/scout/
+repo_url: https://github.com/zyvorai/scout
+repo_name: zyvorai/scout
+edit_uri: edit/main/docs/
+docs_dir: docs
+site_dir: site
+theme:
+  name: material
+  logo: assets/readme/zyvor-logo.svg
+  favicon: assets/readme/zyvor-logo.png
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue
+      accent: blue
+      toggle: {icon: material/brightness-7, name: Switch to dark mode}
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue
+      accent: blue
+      toggle: {icon: material/brightness-4, name: Switch to light mode}
+  features: [navigation.tabs, navigation.sections, navigation.top, navigation.footer, content.code.copy, search.suggest, search.highlight, toc.follow]
+plugins: [search]
+hooks:
+  - docs/overrides/hooks.py
+extra_css:
+  - stylesheets/apple-glass.css
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - {name: mermaid, class: mermaid, format: !!python/name:pymdownx.superfences.fence_code_format }
+  - pymdownx.tabbed: {alternate_style: true}
+  - pymdownx.tasklist: {custom_checkbox: true}
+  - tables
+  - toc: {permalink: true}
+nav:
+  - Home: index.md
+  - Architecture: ARCHITECTURE.md
+  - API: API.md
+  - Deploy: DEPLOY.md
+  - Roadmap: ROADMAP.md
+extra:
+  social:
+    - {icon: fontawesome/brands/github, link: https://github.com/zyvorai/scout}

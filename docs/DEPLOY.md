@@ -1,4 +1,8 @@
-# Deploy Scout
+---
+hero:
+  eyebrow: DEPLOY
+  title: Deploy Scout
+---
 
 Scout runs in your environment — binary, Podman/Docker, Kubernetes, or remote systemd. Not a hosted SaaS.
 
@@ -101,4 +105,4 @@ helm upgrade --install scout deploy/helm/scout -n scout --create-namespace \
 
 ## Security
 
-Bind localhost for local binary use. Container and remote deploys listen on all interfaces inside their network namespace — put TLS and auth at the edge before exposing beyond a trusted network. See [SECURITY.md](../SECURITY.md).
+Bind localhost for local binary use. Container and remote deploys listen on all interfaces inside their network namespace — put TLS and auth at the edge before exposing beyond a trusted network. See [SECURITY.md](https://github.com/zyvorai/scout/blob/main/SECURITY.md).

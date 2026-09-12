@@ -1,4 +1,8 @@
-# HTTP API
+---
+hero:
+  eyebrow: API
+  title: HTTP API
+---
 
 The API is served by `scout serve` and is intended for local integrations and migration planning systems.
 

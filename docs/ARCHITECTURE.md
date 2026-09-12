@@ -1,4 +1,16 @@
-# Architecture
+---
+hero:
+  eyebrow: ARCHITECTURE
+  title: Architecture
+  lead: >-
+    Scout is deliberately a single-binary Go application with no JavaScript
+    build chain — package boundaries and extension points for discovery,
+    rules, and reporting.
+  highlights:
+    - {value: "8", label: "Internal packages, each with a single responsibility"}
+    - {value: "4", label: "Design principles governing every extension"}
+    - {value: "2", label: "Extension interfaces — Discoverer and Rule"}
+---
 
 Scout is deliberately a single-binary Go application with no JavaScript build chain. Static dashboard assets are compiled into the executable with `go:embed`.
 
@@ -31,7 +43,16 @@ A score is the result of explicit findings. Every deduction has a rule ID, sever
 
 Provider-specific identifiers may be stored in tags, but assessment logic consumes the common VM model. This keeps provider code from leaking throughout the system.
 
-## Discovery extension
+## Extension points
+
+<div class="compare-cards" markdown="1">
+
+- **Discoverer** — `Discover(context.Context) (model.Inventory, error)`. A provider authenticates without persisting secrets, enumerates source workloads, normalizes only facts it can verify, returns deterministic IDs for workload references, and avoids modifying the source environment.
+- **Rule** — `ID() string` / `Evaluate(model.VM) *model.Finding`. Returns `nil` when there's nothing to report; findings can be informational, warning, or blocker severity.
+
+</div>
+
+### Discovery extension
 
 Implement:
 
@@ -49,7 +70,7 @@ A provider should:
 4. return deterministic IDs for workload references;
 5. avoid modifying the source environment.
 
-## Rule extension
+### Rule extension
 
 Rules implement:
 
