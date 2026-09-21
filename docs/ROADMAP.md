@@ -4,11 +4,12 @@ This roadmap describes likely open-source work and is not a release commitment.
 
 ## Discovery
 
+- RVTools `.xlsx` import (`vInfo`, `vDisk`, `vSnapshot`, `vHost`, `vDatastore`, `vPartition`, `vNetwork`) — see [IMPORT.md](IMPORT.md)
 - Richer vSphere VM hardware, disks, NICs, guest OS, snapshots, firmware, TPM, and device inventory
 - libvirt connector
 - OpenStack connector
 - Hyper-V connector
-- OVF/OVA and RVTools import adapters
+- OVF/OVA import adapters
 
 ## Assessment
 

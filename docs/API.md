@@ -18,6 +18,10 @@ Returns the ordered per-VM readiness assessments including rule findings and ass
 
 Returns aggregate VM, CPU, memory, storage, readiness, score, and wave counts.
 
+## `GET /api/v1/estate`
+
+Returns capacity runway, the DR score, the target-architecture recommendation, and the three-year arithmetic. Missing inputs stay unknown. They are not filled in.
+
 ## `GET /api/v1/graph`
 
 Returns normalized graph nodes and edges suitable for another UI or planning system.

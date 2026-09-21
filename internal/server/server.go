@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/zyvorai/scout/internal/engine"
+	"github.com/zyvorai/scout/internal/estate"
 	"github.com/zyvorai/scout/internal/graph"
 	"github.com/zyvorai/scout/internal/inventory"
 	"github.com/zyvorai/scout/internal/model"
@@ -30,6 +31,7 @@ type Server struct {
 func (s Server) Handler() http.Handler {
 	mux := http.NewServeMux()
 	assessments := graph.AssignWaves(s.Inventory, engine.Assess(s.Inventory, nil))
+	assessments, est := estate.Annotate(s.Inventory, assessments)
 	summary := engine.Summary(s.Inventory, assessments)
 	depGraph := graph.Build(s.Inventory, assessments)
 
@@ -39,6 +41,7 @@ func (s Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/v1/inventory", func(w http.ResponseWriter, r *http.Request) { writeJSON(w, http.StatusOK, s.Inventory) })
 	mux.HandleFunc("GET /api/v1/assessments", func(w http.ResponseWriter, r *http.Request) { writeJSON(w, http.StatusOK, assessments) })
 	mux.HandleFunc("GET /api/v1/summary", func(w http.ResponseWriter, r *http.Request) { writeJSON(w, http.StatusOK, summary) })
+	mux.HandleFunc("GET /api/v1/estate", func(w http.ResponseWriter, r *http.Request) { writeJSON(w, http.StatusOK, est) })
 	mux.HandleFunc("GET /api/v1/graph", func(w http.ResponseWriter, r *http.Request) { writeJSON(w, http.StatusOK, depGraph) })
 	mux.HandleFunc("GET /api/v1/report", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -62,7 +65,8 @@ func (s Server) Handler() http.Handler {
 			return
 		}
 		a := graph.AssignWaves(inv, engine.Assess(inv, nil))
-		writeJSON(w, http.StatusOK, map[string]any{"summary": engine.Summary(inv, a), "assessments": a, "graph": graph.Build(inv, a)})
+		a, est := estate.Annotate(inv, a)
+		writeJSON(w, http.StatusOK, map[string]any{"summary": engine.Summary(inv, a), "assessments": a, "graph": graph.Build(inv, a), "estate": est})
 	})
 
 	web, _ := fs.Sub(staticFS, "static")

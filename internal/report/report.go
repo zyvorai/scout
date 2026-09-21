@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/zyvorai/scout/internal/engine"
+	"github.com/zyvorai/scout/internal/estate"
 	"github.com/zyvorai/scout/internal/graph"
 	"github.com/zyvorai/scout/internal/model"
 )
@@ -20,6 +21,7 @@ type Data struct {
 	Inventory   model.Inventory
 	Assessments []model.Assessment
 	Summary     model.Summary
+	Estate      estate.Estate
 	Generated   string
 	JSON        template.JS
 }
@@ -27,13 +29,15 @@ type Data struct {
 func Build(inv model.Inventory) Data {
 	a := engine.Assess(inv, nil)
 	a = graph.AssignWaves(inv, a)
+	a, est := estate.Annotate(inv, a)
 	s := engine.Summary(inv, a)
 	payload, _ := json.Marshal(struct {
 		Inventory   model.Inventory    `json:"inventory"`
 		Assessments []model.Assessment `json:"assessments"`
 		Summary     model.Summary      `json:"summary"`
-	}{inv, a, s})
-	return Data{Inventory: inv, Assessments: a, Summary: s, Generated: time.Now().UTC().Format(time.RFC3339), JSON: template.JS(payload)}
+		Estate      estate.Estate      `json:"estate"`
+	}{inv, a, s, est})
+	return Data{Inventory: inv, Assessments: a, Summary: s, Estate: est, Generated: time.Now().UTC().Format(time.RFC3339), JSON: template.JS(payload)}
 }
 
 func Write(w io.Writer, inv model.Inventory) error {

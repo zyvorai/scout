@@ -120,6 +120,45 @@ func DefaultRules() []Rule {
 			}
 			return nil
 		}},
+		ruleFunc{"windows-virtio", func(vm model.VM) *model.Finding {
+			if !strings.Contains(strings.ToLower(vm.OS), "windows") {
+				return nil
+			}
+			f := finding("windows-virtio", model.SeverityWarning, "VirtIO drivers not evidenced; GuestKit inspection required before cutover", "RVTools does not record VirtIO driver state, so readiness cannot be measured from the export.", "Inspect the offline disk with GuestKit before scheduling cutover.", 8)
+			f.Basis = model.BasisNotMeasured
+			return f
+		}},
+		ruleFunc{"aged-or-orphan-snapshots", func(vm model.VM) *model.Finding {
+			var aged, orphan int
+			var wasted int64
+			var sized bool
+			for _, s := range vm.SnapshotDetails {
+				if s.Aged {
+					aged++
+				}
+				if s.Orphan {
+					orphan++
+				}
+				if (s.Aged || s.Orphan) && s.SizeBytes > 0 {
+					wasted += s.SizeBytes
+					sized = true
+				}
+			}
+			if aged == 0 && orphan == 0 {
+				return nil
+			}
+			detail := fmt.Sprintf("%d aged and %d orphan snapshots on this VM.", aged, orphan)
+			basis := model.BasisMeasured
+			if sized {
+				detail += fmt.Sprintf(" Wasted bytes measured: %d.", wasted)
+			} else {
+				detail += " Snapshot size was not in the sheet, so wasted bytes were not measured."
+				basis = model.BasisNotMeasured
+			}
+			f := finding("aged-or-orphan-snapshots", model.SeverityWarning, "Aged or orphaned snapshots", detail, "Delete snapshots that are no longer a recovery point before migration.", 8)
+			f.Basis = basis
+			return f
+		}},
 	}
 }
 
@@ -139,6 +178,9 @@ func Assess(inv model.Inventory, rules []Rule) []model.Assessment {
 		warning := false
 		for _, r := range rules {
 			if f := r.Evaluate(vm); f != nil {
+				if f.Basis == "" {
+					f.Basis = model.BasisMeasured
+				}
 				findings = append(findings, *f)
 				score -= f.Penalty
 				if f.Severity == model.SeverityBlocker {

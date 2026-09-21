@@ -58,7 +58,10 @@ Generate a standalone report:
 
 ```bash
 ./bin/scout report --file scout.json --out report.html
+./bin/scout report --file scout.json --executive executive.html --pdf executive.pdf --workbook workbook.zip
 ```
+
+See [docs/IMPORT.md](docs/IMPORT.md) for RVTools, storage, DR, and TCO inputs. Those files stay on the machine that runs Scout.
 
 ## VMware vCenter discovery
 
