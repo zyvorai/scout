@@ -1,37 +1,88 @@
-# Zyvor Scout
+# Scout
+
+[![CI](https://github.com/zyvorai/scout/actions/workflows/ci.yml/badge.svg)](https://github.com/zyvorai/scout/actions/workflows/ci.yml)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-0.1.0-informational)](cmd/scout/main.go)
+
+![Scout — migration discovery and readiness](docs/social/scout-share-card.png)
 
 **Migration discovery and readiness before migration risk.**
 
-Zyvor Scout is an Apache-2.0, read-only assessment tool for infrastructure teams planning migrations from virtualized environments to KVM/KubeVirt and other open platforms. It discovers or imports VM inventory, evaluates compatibility, explains blockers, maps workload dependencies, groups workloads into migration waves, and serves a polished local dashboard from one Go binary.
+📖 **[Read the full docs](https://zyvorai.github.io/scout/)** — quickstart, import formats, architecture, and API.
+
+Zyvor Scout is an Apache-2.0, read-only assessment tool for teams planning migrations from virtualized estates to KVM/KubeVirt and other open platforms. It discovers or imports VM inventory, evaluates compatibility, explains blockers, maps dependencies, groups workloads into migration waves, and serves a polished local dashboard from one Go binary.
 
 > Scout assesses and plans. It does **not** modify source workloads or execute migrations.
+
+## Contents
+
+- [Why Scout](#why-scout)
+- [Capabilities](#capabilities)
+- [Quick start](#quick-start)
+- [VMware vCenter discovery](#vmware-vcenter-discovery)
+- [How scoring works](#how-scoring-works)
+- [Architecture](#architecture)
+- [API](#api)
+- [Deploy](#deploy)
+- [Security model](#security-model)
+- [Project direction](#project-direction)
+- [License](#license)
 
 ## Why Scout
 
 Migration projects often begin with spreadsheets that hide the hard parts: RDM/shared disks, vTPM, Secure Boot, passthrough devices, snapshot chains, legacy guests, and application dependencies. Scout turns those facts into an explainable readiness score and an execution-oriented plan.
 
-### Included in v0.1.0
+```text
+       discovery / JSON import / RVTools
+                │
+                ▼
+           Inventory Model
+                │
+        ┌───────┴────────┐
+        ▼                ▼
+  Compatibility       Dependency
+     Engine              Graph
+        │                │
+        └───────┬────────┘
+                ▼
+        Migration Waves
+                │
+        ┌───────┴──────────┐
+        ▼                  ▼
+   JSON API            HTML Report
+        │
+        ▼
+ Embedded Web Dashboard
+```
 
-- Read-only demo and VMware vCenter REST discovery
-- Strict JSON inventory import format
+## Capabilities
+
+### Discover
+
+- Demo inventory for safe local evaluation
+- VMware vCenter REST discovery (session auth, no guessed fields)
+- Strict JSON inventory import
+- Local RVTools / storage / DR / TCO inputs ([docs/IMPORT.md](docs/IMPORT.md)) — files stay on the machine that runs Scout
+
+### Assess
+
 - Explainable compatibility rule engine
 - Ready / Review / Blocked classification
-- Dependency graph
-- Connected-workload migration waves
-- Portable HTML assessment report
-- Zyvor-branded responsive dashboard embedded into the binary
+- Rules for encryption, RDM, shared disks, vTPM, Secure Boot, snapshots, GPU/PCI/USB/SR-IOV passthrough, guest tools, firmware, legacy OS
+
+### Plan
+
+- Dependency graph of connected workloads
+- Migration waves that cut over together
+- Portable HTML assessment report, executive PDF, workbook export
+
+### Operate
+
+- Zyvor-branded responsive dashboard embedded in one binary
 - JSON API for integrations
-- Security headers and localhost-by-default web binding
-- Docker / Podman packaging (Compose + Quadlet)
-- Remote systemd deploy + smoke (`scripts/deploy-remote.sh`)
-- Helm chart and Kustomize manifests
-- Unit and API tests
-- GitHub Actions CI
-- Apache-2.0 license
-
-## Screenshot
-
-![Zyvor Scout dashboard](docs/scout-dashboard.png)
+- Localhost-by-default binding + security headers
+- Docker / Podman (Compose + Quadlet), remote systemd deploy, Helm + Kustomize
+- Unit and API tests, GitHub Actions CI
 
 ## Quick start
 
@@ -54,20 +105,16 @@ make build
 
 Visit `http://127.0.0.1:18447`.
 
-Generate a standalone report:
-
 ```bash
 ./bin/scout report --file scout.json --out report.html
 ./bin/scout report --file scout.json --executive executive.html --pdf executive.pdf --workbook workbook.zip
 ```
 
-See [docs/IMPORT.md](docs/IMPORT.md) for RVTools, storage, DR, and TCO inputs. Those files stay on the machine that runs Scout.
+![Zyvor Scout dashboard](docs/scout-dashboard.png)
 
 ## VMware vCenter discovery
 
-Scout includes a dependency-free vCenter REST connector that authenticates with an API session and enumerates VMs. v0.1.0 intentionally treats fields that are not returned by the basic VM endpoint as unknown rather than guessing them. Rich hardware/guest collection is on the roadmap.
-
-Prefer credentials through environment variables so passwords do not land in shell history:
+Dependency-free vCenter REST connector: API session auth, VM enumeration. v0.1.0 treats fields not returned by the basic VM endpoint as unknown rather than guessing them. Richer hardware/guest collection is on the roadmap.
 
 ```bash
 export VCENTER_URL='https://vcenter.example.com'
@@ -75,15 +122,12 @@ export VCENTER_USERNAME='administrator@vsphere.local'
 export VCENTER_PASSWORD='...'
 
 ./bin/scout scan --source vmware --out scout.json
-```
 
-For lab systems with private PKI only:
-
-```bash
+# Lab / private PKI only — do not use in production
 ./bin/scout scan --source vmware --insecure --out scout.json
 ```
 
-`--insecure` disables TLS certificate verification and should not be used in production.
+Prefer environment variables so passwords do not land in shell history.
 
 ## How scoring works
 
@@ -93,34 +137,9 @@ Every VM begins at 100. Rules emit one of three finding levels:
 - **warning** — needs review or remediation
 - **blocker** — excludes the workload from migration waves until resolved
 
-Built-in rules currently inspect encryption, RDM, shared disks, vTPM, Secure Boot, snapshot depth, GPU/PCI passthrough, SR-IOV, USB passthrough, guest tools, firmware mode, and legacy operating systems.
-
 Rules live in `internal/engine/engine.go` and are intentionally simple to extend.
 
 ## Architecture
-
-```text
-       discovery / JSON import
-                │
-                ▼
-           Inventory Model
-                │
-        ┌───────┴────────┐
-        ▼                ▼
-  Compatibility       Dependency
-     Engine              Graph
-        │                │
-        └───────┬────────┘
-                ▼
-        Migration Waves
-                │
-        ┌───────┴──────────┐
-        ▼                  ▼
-   JSON API            HTML Report
-        │
-        ▼
- Embedded Web Dashboard
-```
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for package boundaries and extension points.
 
@@ -140,43 +159,20 @@ When `scout serve` is running:
 
 See [docs/API.md](docs/API.md).
 
-## Development
-
-```bash
-make test
-make vet
-make build
-make report
-```
-
-Direct commands:
-
-```bash
-go test -race ./...
-go vet ./...
-go build ./cmd/scout
-```
-
 ## Deploy
 
 ```bash
 # Podman or Docker (auto-detects)
 make container-up
-# or: ./scripts/container.sh up --build
 
 # Remote systemd (cross-compile + SSH + smoke)
 ./scripts/deploy-remote.sh <host> [user] --port 19726
-# Or: SCOUT_PORT=19726 ./scripts/deploy-remote.sh <host> [user]
-# Omit port → reuse .deploy-last PORT, else pick random 18000–28999
 
 # Smoke an existing instance
 SCOUT_URL=http://<host>:19726 ./scripts/smoke-remote.sh
-./scripts/smoke-remote.sh --port 19726
 
 # Kubernetes
 kubectl apply -k deploy/k8s
-
-# Helm
 helm upgrade --install scout deploy/helm/scout -n scout --create-namespace \
   --set-file inventory.json=./scout.json
 ```
@@ -185,30 +181,47 @@ Details: [docs/DEPLOY.md](docs/DEPLOY.md).
 
 ## Security model
 
-- Source-side operations are read-only.
-- vCenter credentials are kept in memory and never written to the inventory or report.
-- The server binds to `127.0.0.1:18447` by default.
-- Requests have conservative timeouts and an 8 MiB analysis-body limit.
-- The dashboard ships with CSP, frame, MIME-sniffing, referrer, and permissions headers.
-- Put Scout behind authenticated TLS termination before exposing it to a network.
+- Source-side operations are read-only
+- vCenter credentials stay in memory — never written to inventory or report
+- Server binds to `127.0.0.1:18447` by default
+- Conservative timeouts and an 8 MiB analysis-body limit
+- CSP, frame, MIME-sniffing, referrer, and permissions headers on the dashboard
+- Put Scout behind authenticated TLS termination before exposing it to a network
 
 Read [SECURITY.md](SECURITY.md) before reporting vulnerabilities.
 
 ## Project direction
 
-The intended open-source boundary is **discovery + assessment + dependency planning**. Execution systems can consume Scout's JSON output without making Scout responsible for cutover or source mutation.
+The open-source boundary is **discovery + assessment + dependency planning**. Execution systems can consume Scout's JSON without making Scout responsible for cutover or source mutation.
 
-Planned areas include richer vSphere hardware collection, libvirt/OpenStack/Hyper-V discovery, guest inspection adapters, traffic-derived dependency input, compatibility rule packs, signed assessment bundles, and export adapters for migration orchestrators.
+Planned: richer vSphere hardware collection, libvirt/OpenStack/Hyper-V discovery, guest inspection adapters, traffic-derived dependencies, rule packs, signed assessment bundles, orchestrator export adapters.
 
 See [docs/ROADMAP.md](docs/ROADMAP.md).
+
+## Development
+
+```bash
+make test && make vet && make build
+```
+
+## Docs
+
+| Doc | Topic |
+|---|---|
+| [zyvorai.github.io/scout](https://zyvorai.github.io/scout/) | Product docs |
+| [docs/IMPORT.md](docs/IMPORT.md) | RVTools, storage, DR, TCO inputs |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Package boundaries |
+| [docs/API.md](docs/API.md) | HTTP API |
+| [docs/DEPLOY.md](docs/DEPLOY.md) | Container, remote, Helm |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | Next milestones |
+
+Social assets: [docs/social/](docs/social/).
 
 ## License
 
 ### Open source (Apache-2.0)
 
-This repository is licensed under the [Apache License, Version 2.0](LICENSE).
-You may use, modify, and run it for personal, lab, and commercial production
-use at no charge, subject to Apache-2.0 (preserve notices / NOTICE where required).
+Licensed under the [Apache License, Version 2.0](LICENSE). Personal, lab, and commercial production use at no charge, subject to Apache-2.0 (preserve notices / NOTICE where required).
 
 ### Enterprise
 
