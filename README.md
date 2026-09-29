@@ -4,6 +4,15 @@
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-0.1.0-informational)](cmd/scout/main.go)
 
+[![Book a demo](https://img.shields.io/badge/Book_a_demo-0071e3?style=for-the-badge)](https://zyvor.dev/schedule?utm_source=github&utm_medium=scout&utm_campaign=readme_hero)
+[![30-day PoC](https://img.shields.io/badge/30--day_PoC-1d1d1f?style=for-the-badge)](https://zyvor.dev/poc?utm_source=github&utm_medium=scout&utm_campaign=readme_hero)
+
+[![Book a demo](https://img.shields.io/badge/Book_a_demo-0071e3?style=for-the-badge)](https://zyvor.dev/schedule?utm_source=github&utm_medium=scout&utm_campaign=readme_hero)
+[![30-day PoC](https://img.shields.io/badge/30--day_PoC-1d1d1f?style=for-the-badge)](https://zyvor.dev/poc?utm_source=github&utm_medium=scout&utm_campaign=readme_hero)
+
+[![Book a demo](https://img.shields.io/badge/Book_a_demo-0071e3?style=for-the-badge)](https://zyvor.dev/schedule?utm_source=github&utm_medium=scout&utm_campaign=readme_hero)
+[![30-day PoC](https://img.shields.io/badge/30--day_PoC-1d1d1f?style=for-the-badge)](https://zyvor.dev/poc?utm_source=github&utm_medium=scout&utm_campaign=readme_hero)
+
 ![Scout — migration discovery and readiness](docs/social/scout-share-card.png)
 
 **Migration discovery and readiness before migration risk.**
@@ -226,4 +235,10 @@ Licensed under the [Apache License, Version 2.0](LICENSE). Personal, lab, and co
 ### Enterprise
 
 Production support, SLAs, and Zyvor Enterprise products are licensed separately.
-Contact [sales@zyvor.dev](mailto:sales@zyvor.dev) or see [zyvor.dev](https://zyvor.dev).
+Contact [sales@zyvor.dev](mailto:sales@zyvor.dev) or see [zyvor.dev](https://zyvor.dev/?utm_source=github&utm_medium=scout&utm_campaign=readme_footer).
+
+Book a [demo](https://zyvor.dev/schedule?utm_source=github&utm_medium=scout&utm_campaign=readme_footer) or start a [30-day PoC](https://zyvor.dev/poc?utm_source=github&utm_medium=scout&utm_campaign=readme_footer). Fallback: [sales@zyvor.dev](mailto:sales@zyvor.dev).
+
+Book a [demo](https://zyvor.dev/schedule?utm_source=github&utm_medium=scout&utm_campaign=readme_footer) or start a [30-day PoC](https://zyvor.dev/poc?utm_source=github&utm_medium=scout&utm_campaign=readme_footer). Fallback: [sales@zyvor.dev](mailto:sales@zyvor.dev).
+
+Book a [demo](https://zyvor.dev/schedule?utm_source=github&utm_medium=scout&utm_campaign=readme_footer) or start a [30-day PoC](https://zyvor.dev/poc?utm_source=github&utm_medium=scout&utm_campaign=readme_footer). Fallback: [sales@zyvor.dev](mailto:sales@zyvor.dev).
