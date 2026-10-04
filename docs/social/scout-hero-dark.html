@@ -8,58 +8,47 @@
   Build: ./docs/social/build-hero-dark.sh  ->  scout-hero-dark.jpg (2400x1260)
 -->
 <style>
-  :root { --blue:#0071e3; --signal:#2997ff; --cyan:#64d2ff; --green:#30d158; --amber:#ff9f0a;
+  :root { --blue:#0071e3; --signal:#2997ff; --cyan:#64d2ff; --green:#30d158; --amber:#ff9f0a; --red:#ff453a; --violet:#bf5af2;
     --sans:'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif; --mono:'SF Mono',Menlo,Consolas,monospace; }
   * { box-sizing:border-box; }
   html,body { margin:0; padding:0; }
   body { width:1200px; height:630px; overflow:hidden; color:#f5f5f7; font-family:var(--sans); position:relative; background:#000; }
   .aurora { position:absolute; inset:0;
-    background:radial-gradient(720px 460px at 80% 16%, rgba(41,151,255,.40), transparent 62%),
-               radial-gradient(600px 420px at 104% 98%, rgba(100,210,255,.20), transparent 60%),
+    background:radial-gradient(720px 460px at 80% 16%, rgba(41,151,255,.34), transparent 62%),
+               radial-gradient(600px 420px at 104% 98%, rgba(100,210,255,.16), transparent 60%),
                radial-gradient(520px 380px at 6% 110%, rgba(0,113,227,.28), transparent 60%); }
-  .grid { position:absolute; inset:0; opacity:.09;
-    background-image:linear-gradient(rgba(120,180,255,.9) 1px,transparent 1px),linear-gradient(90deg,rgba(120,180,255,.9) 1px,transparent 1px);
-    background-size:44px 44px; -webkit-mask-image:radial-gradient(900px 520px at 72% 42%, #000 18%, transparent 75%); }
-  .left { position:absolute; left:60px; top:52px; width:560px; z-index:3; }
+  .copy { position:absolute; left:60px; top:52px; width:560px; z-index:3; }
   .brand { display:flex; align-items:center; gap:12px; font-family:var(--mono); font-size:14px; letter-spacing:.18em; text-transform:uppercase; color:#a1a1a6; }
   .brand b { color:#fff; }
   .word { margin:20px 0 0; font-size:112px; line-height:.95; font-weight:800; letter-spacing:-.05em; white-space:nowrap;
     background:linear-gradient(92deg,#fff 0%,#e3f0ff 38%,var(--signal) 74%,var(--cyan) 100%); -webkit-background-clip:text; background-clip:text; color:transparent; padding-bottom:6px; }
   .tag { margin:14px 0 0; font-size:31px; line-height:1.15; font-weight:700; letter-spacing:-.02em; }
   .tag em { font-style:normal; color:var(--signal); }
-  .lede { margin:12px 0 0; font-size:18px; line-height:1.45; color:#b8b8bf; width:520px; }
+  .lede { margin:12px 0 0; font-size:18px; line-height:1.45; color:#b8b8bf; width:520px; text-shadow:0 1px 12px #000; }
   .stats { margin-top:24px; display:flex; gap:32px; }
   .stat b { display:block; font-size:34px; font-weight:800; letter-spacing:-.03em; color:#fff; }
   .stat span { font-family:var(--mono); font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:#8e8e93; }
   .pill { position:absolute; left:60px; bottom:40px; display:flex; gap:10px; z-index:3; }
-  .pill span { font-family:var(--mono); font-size:13.5px; font-weight:700; padding:7px 13px; border-radius:18px; border:1.5px solid rgba(255,255,255,.2); color:#e5e5ea; background:rgba(255,255,255,.04); }
+  .pill span { font-family:var(--mono); font-size:13.5px; font-weight:700; padding:7px 13px; border-radius:18px; border:1.5px solid rgba(255,255,255,.2); color:#e5e5ea; background:rgba(0,0,0,.6); }
   .pill span.b { background:var(--blue); border-color:var(--blue); color:#fff; box-shadow:0 0 24px rgba(0,113,227,.55); }
-
-  .right { position:absolute; left:652px; top:96px; width:560px; z-index:2; }
-  .win { position:relative; width:560px; border-radius:16px; overflow:hidden; z-index:2;
-    background:linear-gradient(180deg, rgba(22,24,30,.94), rgba(10,11,14,.96));
-    box-shadow:0 50px 100px rgba(0,0,0,.75), 0 0 0 1px rgba(255,255,255,.14), 0 0 90px rgba(41,151,255,.22);
-    transform:perspective(1600px) rotateY(-14deg) rotateX(4deg); transform-origin:left center; }
-  .bar { height:34px; display:flex; align-items:center; gap:8px; padding:0 14px; background:rgba(255,255,255,.05); border-bottom:1px solid rgba(255,255,255,.07); }
-  .bar i { width:11px; height:11px; border-radius:50%; background:#ff5f57; } .bar i:nth-child(2){background:#febc2e} .bar i:nth-child(3){background:#28c840}
-  .bar em { margin-left:auto; margin-right:auto; font-style:normal; font-family:var(--mono); font-size:12px; color:#8e8e93; transform:translateX(-24px); }
-  .term { min-height:214px; padding:20px 22px 24px; font-family:var(--mono); font-size:15.5px; line-height:1.75; }
-  .l { white-space:pre; overflow:hidden; text-overflow:ellipsis; color:#f5f5f7; }
-  .l .p { color:var(--signal); font-weight:700; }
-  .l.out { color:#a1a1a6; }
-  .l.cm { color:#6e6e73; }
-  .l.ok { color:#d1f7dc; } .l.ok span { color:var(--green); font-weight:700; }
-  .l.warn { color:#ffe1b0; } .l.warn span { color:var(--amber); font-weight:700; }
-  .cur { display:inline-block; width:9px; height:18px; background:var(--signal); vertical-align:-3px; box-shadow:0 0 12px var(--signal); }
-  .chips { margin:34px 0 0 38px; width:480px; display:flex; flex-wrap:wrap; gap:10px; position:relative; z-index:3; }
-  .chips span { font-family:var(--mono); font-size:13px; font-weight:700; letter-spacing:.04em; padding:7px 12px; border-radius:14px;
-    color:#cfe6ff; background:rgba(10,20,35,.82); border:1px solid rgba(41,151,255,.45); box-shadow:0 0 18px rgba(41,151,255,.18); }
+  .art { position:absolute; left:520px; top:0; width:680px; height:630px; z-index:2; }
+  .art svg { display:block; }
+  #labels { position:absolute; inset:0; z-index:4; pointer-events:none; }
+  .lbl { position:absolute; font-family:var(--mono); font-size:12.5px; color:#a1a1a6; text-align:center; transform:translate(-50%,-50%); white-space:nowrap; }
+  .lbl b { display:block; font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:#e5e5ea; }
+  .lbl span { display:block; margin-top:3px; }
+  .lbl.box { padding:7px 12px; border-radius:12px; background:rgba(8,10,14,.85); border:1px solid rgba(255,255,255,.14); }
+  .lbl.chip { padding:6px 11px; border-radius:13px; font-size:12.5px; font-weight:700; color:#cfe6ff; background:rgba(10,20,35,.85); border:1px solid rgba(41,151,255,.5); box-shadow:0 0 16px rgba(41,151,255,.2); }
+  .lbl.left { transform:translate(0,-50%); text-align:left; }
+  .lbl.right { transform:translate(-100%,-50%); text-align:right; }
+  .ok { color:var(--green) !important; } .warn { color:var(--amber) !important; } .bad { color:var(--red) !important; } .sig { color:var(--signal) !important; } .cy { color:var(--cyan) !important; } .vi { color:var(--violet) !important; }
 </style>
 </head>
 <body>
 <div class="aurora"></div>
-<div class="grid"></div>
-<div class="left">
+<div class="art"><svg id="art" width="680" height="630" viewBox="0 0 680 630" xmlns="http://www.w3.org/2000/svg"></svg></div>
+<div id="labels"></div>
+<div class="copy">
   <div class="brand"><svg viewBox="0 0 64 64" width="30" height="30" aria-hidden="true"><defs><linearGradient id="zb" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#ff5a15"/><stop offset="1" stop-color="#cc420a"/></linearGradient></defs><rect width="64" height="64" rx="15" fill="url(#zb)"/><path d="M18.5,20.5 45.5,20.5 18.5,43.5 45.5,43.5" fill="none" stroke="#fff" stroke-width="8.3" stroke-linecap="round" stroke-linejoin="round"/></svg><b>Zyvor</b><span>&middot;</span><span>Migration readiness assessment</span></div>
   <div class="word">Scout</div>
   <div class="tag">Know every blocker.<br><em>Before you migrate.</em></div>
@@ -67,8 +56,123 @@
   <div class="stats"><div class="stat"><b>14</b><span>readiness rules</span></div><div class="stat"><b>0</b><span>third-party deps</span></div><div class="stat"><b>1</b><span>Go binary</span></div></div>
 </div>
 <div class="pill"><span class="b">github.com/zyvorai/scout</span><span>Apache-2.0</span></div>
-<div class="right"><div class="win"><div class="bar"><i></i><i></i><i></i><em>scout</em></div>
-<div class="term"><div class="l"><span class="p">$</span> ./bin/scout scan --source demo --out scout.json</div><div class="l out">Discovered 8 VMs from demo -&gt; scout.json</div><div class="l"><span class="p">$</span> ./bin/scout serve --file scout.json</div><div class="l ok"><span>&#10003;</span> Scout dashboard listening addr=127.0.0.1:18447</div><div class="l"><span class="p">$</span> <i class="cur"></i></div></div></div>
-<div class="chips"><span>Go</span><span>VMware vCenter</span><span>KubeVirt</span><span>KVM</span><span>RVTools</span><span>JSON API</span></div></div>
+<script>
+var Z = (function () {
+  var NS = 'http://www.w3.org/2000/svg', svg = document.getElementById('art'), labels = document.getElementById('labels');
+  var seed = 20261004;
+  function rnd() { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; }
+  function el(tag, a, parent) { var n = document.createElementNS(NS, tag); for (var k in a) n.setAttribute(k, a[k]); (parent || svg).appendChild(n); return n; }
+  function g(attrs) { return el('g', attrs || {}); }
+  function label(x, y, inner, cls, style) { var d = document.createElement('div'); d.className = 'lbl ' + (cls || ''); d.style.left = (520 + x) + 'px'; d.style.top = y + 'px'; if (style) d.setAttribute('style', d.getAttribute('style') + ';' + style); d.innerHTML = inner; labels.appendChild(d); return d; }
+  return { NS: NS, svg: svg, W: 680, H: 630, rnd: rnd, el: el, g: g, label: label,
+    reseed: function (s) { seed = s; },
+    c: { blue: '#0071e3', signal: '#2997ff', cyan: '#64d2ff', green: '#30d158', amber: '#ff9f0a', red: '#ff453a', violet: '#bf5af2', teal: '#40c8e0', indigo: '#5e5ce6', pink: '#ff375f', white: '#f5f5f7', grey: '#8e8e93' } };
+})();
+(function () {
+// Scout: topographic survey. Contour terrain, VM survey markers scored by readiness, dependency lines,
+// and numbered migration-wave trails climbing to the KubeVirt summit. The blocker VM stays off every trail.
+var C = Z.c;
+var defs = Z.el('defs', {});
+defs.innerHTML = '<filter id="sc-gl" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>' +
+  '<filter id="sc-sf" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="14"/></filter>' +
+  '<linearGradient id="sc-fh" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".13" stop-color="#fff" stop-opacity="0"/><stop offset=".3" stop-color="#fff"/><stop offset=".95" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>' +
+  '<linearGradient id="sc-fv" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".07" stop-color="#fff"/><stop offset=".93" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>' +
+  '<mask id="sc-mh" maskUnits="userSpaceOnUse" x="0" y="0" width="680" height="630"><rect width="680" height="630" fill="url(#sc-fh)"/></mask>' +
+  '<mask id="sc-mv" maskUnits="userSpaceOnUse" x="0" y="0" width="680" height="630"><rect width="680" height="630" fill="url(#sc-fv)"/></mask>' +
+  '<radialGradient id="sc-sum"><stop offset="0" stop-color="#64d2ff" stop-opacity=".5"/><stop offset="1" stop-color="#2997ff" stop-opacity="0"/></radialGradient>';
+
+var target = { x: 572, y: 318 };
+var hills = [{ x: target.x, y: target.y, a: 1.0, s: 92 }];
+Z.reseed(7);
+for (var i = 0; i < 7; i++) hills.push({ x: 120 + Z.rnd() * 420, y: 60 + Z.rnd() * 510, a: .35 + Z.rnd() * .45, s: 50 + Z.rnd() * 60 });
+function field(x, y) {
+  var v = 0.15 * (x / 680);
+  for (var k = 0; k < hills.length; k++) { var h = hills[k], dx = x - h.x, dy = y - h.y; v += h.a * Math.exp(-(dx * dx + dy * dy) / (2 * h.s * h.s)); }
+  return v;
+}
+
+// marching squares
+var S = 6, X0 = 40, Y0 = 0, NX = Math.ceil(640 / S), NY = Math.ceil(630 / S), F = [];
+for (var j = 0; j <= NY; j++) { F.push([]); for (var i = 0; i <= NX; i++) F[j].push(field(X0 + i * S, Y0 + j * S)); }
+function contour(L) {
+  var d = [];
+  function ip(x1, y1, v1, x2, y2, v2) { var t = (L - v1) / (v2 - v1); return [x1 + (x2 - x1) * t, y1 + (y2 - y1) * t]; }
+  for (var j = 0; j < NY; j++) for (var i = 0; i < NX; i++) {
+    var x = X0 + i * S, y = Y0 + j * S, a = F[j][i], b = F[j][i + 1], c = F[j + 1][i + 1], e = F[j + 1][i];
+    var pts = [];
+    if ((a < L) !== (b < L)) pts.push(ip(x, y, a, x + S, y, b));
+    if ((b < L) !== (c < L)) pts.push(ip(x + S, y, b, x + S, y + S, c));
+    if ((e < L) !== (c < L)) pts.push(ip(x, y + S, e, x + S, y + S, c));
+    if ((a < L) !== (e < L)) pts.push(ip(x, y, a, x, y + S, e));
+    for (var p = 0; p + 1 < pts.length; p += 2)
+      d.push('M' + pts[p][0].toFixed(1) + ',' + pts[p][1].toFixed(1) + 'L' + pts[p + 1][0].toFixed(1) + ',' + pts[p + 1][1].toFixed(1));
+  }
+  return d.join('');
+}
+var terrain = Z.el('g', { mask: 'url(#sc-mv)' }, Z.g({ mask: 'url(#sc-mh)' }));
+for (var n = 1; n <= 16; n++) {
+  var L = 0.07 * n, idx = n % 4 === 0;
+  Z.el('path', { d: contour(L), fill: 'none', 'stroke-linecap': 'round',
+    stroke: idx ? 'rgba(100,210,255,.5)' : 'rgba(120,185,255,' + (0.13 + n * 0.01).toFixed(3) + ')', 'stroke-width': idx ? 1.3 : .9 }, terrain);
+}
+Z.el('circle', { cx: target.x, cy: target.y, r: 90, fill: 'url(#sc-sum)', opacity: .7 });
+
+// survey VMs: r = ready, w = warnings, b = blocker
+var vms = [
+  { x: 168, y: 486, s: 'r', w: 1 }, { x: 248, y: 440, s: 'r', w: 1 }, { x: 334, y: 488, s: 'w', w: 1 },
+  { x: 182, y: 300, s: 'r', w: 2 }, { x: 272, y: 252, s: 'w', w: 2 }, { x: 352, y: 300, s: 'r', w: 2 },
+  { x: 196, y: 120, s: 'r', w: 3 }, { x: 300, y: 158, s: 'w', w: 3 }, { x: 398, y: 108, s: 'r', w: 3 },
+  { x: 512, y: 132, s: 'b', w: 0 }
+];
+var deps = [[2, 5], [4, 7], [9, 8], [3, 4], [1, 4]];
+deps.forEach(function (e) {
+  var a = vms[e[0]], b = vms[e[1]];
+  Z.el('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, stroke: e[0] === 9 ? C.red : 'rgba(200,220,255,.45)', 'stroke-width': 1, 'stroke-dasharray': '2 4', opacity: e[0] === 9 ? .7 : 1 });
+});
+
+// wave trails (Catmull-Rom through the wave's VMs, ending at the summit)
+var waveCol = { 1: C.cyan, 2: C.signal, 3: C.violet };
+function trail(pts) {
+  var d = 'M' + pts[0].x + ',' + pts[0].y;
+  for (var i = 0; i < pts.length - 1; i++) {
+    var p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2;
+    d += ' C' + (p1.x + (p2.x - p0.x) / 6).toFixed(1) + ',' + (p1.y + (p2.y - p0.y) / 6).toFixed(1) + ' ' + (p2.x - (p3.x - p1.x) / 6).toFixed(1) + ',' + (p2.y - (p3.y - p1.y) / 6).toFixed(1) + ' ' + p2.x + ',' + p2.y;
+  }
+  return d;
+}
+[1, 2, 3].forEach(function (w) {
+  var pts = vms.filter(function (v) { return v.w === w; }).concat([{ x: target.x - 14, y: target.y + (w - 2) * 14 }]);
+  var d = trail(pts), col = waveCol[w];
+  Z.el('path', { d: d, fill: 'none', stroke: col, 'stroke-width': 6, opacity: .12, 'stroke-linecap': 'round' });
+  Z.el('path', { d: d, fill: 'none', stroke: col, 'stroke-width': 1.8, 'stroke-dasharray': '7 5', 'stroke-linecap': 'round', filter: 'url(#sc-gl)' });
+  var s = pts[0], bx = s.x - 26, by = s.y - 4;
+  Z.el('circle', { cx: bx, cy: by, r: 11, fill: 'rgba(6,10,18,.95)', stroke: col, 'stroke-width': 1.6, filter: 'url(#sc-gl)' });
+  var t = Z.el('text', { x: bx, y: by + 4.3, 'text-anchor': 'middle', fill: '#fff', 'font-size': 12, 'font-weight': 700, 'font-family': 'SF Mono, Menlo, monospace' });
+  t.textContent = String(w);
+});
+
+// VM markers: survey triangles coloured by readiness
+var scol = { r: C.green, w: C.amber, b: C.red };
+vms.forEach(function (v) {
+  var col = scol[v.s];
+  Z.el('circle', { cx: v.x, cy: v.y, r: 14, fill: col, opacity: .16, filter: 'url(#sc-sf)' });
+  Z.el('path', { d: 'M' + v.x + ',' + (v.y - 8) + ' L' + (v.x + 7) + ',' + (v.y + 5) + ' L' + (v.x - 7) + ',' + (v.y + 5) + 'Z', fill: 'rgba(6,10,18,.95)', stroke: col, 'stroke-width': 1.6, 'stroke-linejoin': 'round', filter: 'url(#sc-gl)' });
+  Z.el('circle', { cx: v.x, cy: v.y + 1, r: 1.8, fill: col });
+});
+var bv = vms[9];
+Z.el('circle', { cx: bv.x, cy: bv.y, r: 17, fill: 'none', stroke: C.red, 'stroke-width': 1, 'stroke-dasharray': '3 3', opacity: .8 });
+
+// summit flag
+Z.el('circle', { cx: target.x, cy: target.y, r: 9, fill: 'rgba(6,10,18,.95)', stroke: '#fff', 'stroke-width': 2, filter: 'url(#sc-gl)' });
+Z.el('circle', { cx: target.x, cy: target.y, r: 3, fill: C.cyan });
+Z.el('line', { x1: target.x, y1: target.y - 9, x2: target.x, y2: target.y - 40, stroke: '#fff', 'stroke-width': 1.5 });
+Z.el('path', { d: 'M' + target.x + ',' + (target.y - 40) + ' l18,6 l-18,6Z', fill: C.cyan, filter: 'url(#sc-gl)' });
+
+Z.label(target.x, target.y + 40, '<b>KubeVirt</b><span>KVM readiness</span>');
+Z.label(bv.x + 2, bv.y + 32, '<span class="bad" style="margin:0">blocker</span>');
+Z.label(392, 562, 'migration waves', 'chip');
+Z.label(548, 44, 'vCenter &middot; RVTools', 'chip');
+})();
+</script>
 </body>
 </html>
