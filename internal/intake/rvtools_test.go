@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -233,3 +234,47 @@ func xmlEscape(s string) string {
 }
 
 func bytesToString(b []byte) string { return string(b) }
+
+func TestFromRVToolsKeepsDuplicateNames(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "dup.xlsx")
+	writeXLSX(t, path, map[string][][]string{
+		"vInfo": {
+			{"VM", "VM UUID", "Powerstate", "Template", "CPUs", "Memory MB"},
+			{"web", "uuid-1", "poweredOn", "False", "2", "2048"},
+			{"WEB", "uuid-1", "poweredOn", "False", "4", "4096"},
+		},
+	})
+	inv, err := FromRVTools(path, time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(inv.VMs) != 2 {
+		t.Fatalf("want 2 vms, got %d", len(inv.VMs))
+	}
+	if inv.VMs[0].CPUs != 2 || inv.VMs[1].CPUs != 4 {
+		t.Fatalf("vms overwritten: %+v", inv.VMs)
+	}
+	if inv.VMs[0].ID == inv.VMs[1].ID {
+		t.Fatalf("duplicate id %q", inv.VMs[0].ID)
+	}
+}
+
+func TestReadSheetInlineRichText(t *testing.T) {
+	x := `<worksheet><sheetData><row r="1"><c r="A1" t="inlineStr"><is><r><t>foo</t></r><r><t xml:space="preserve"> bar</t></r></is></c></row><row r="2"><c r="A2" t="inlineStr"><is><t>baz</t></is></c></row></sheetData></worksheet>`
+	rows, err := readSheet(strings.NewReader(x), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(rows) != 1 || rows[0]["foo bar"] != "baz" {
+		t.Fatalf("rows: %v", rows)
+	}
+}
+
+func TestMergeAssumptionsRejectsNegativeIncludedVMs(t *testing.T) {
+	p := filepath.Join(t.TempDir(), "a.json")
+	os.WriteFile(p, []byte(`{"includedMigrationVMs":-1}`), 0o600)
+	inv := model.Inventory{}
+	if err := MergeAssumptions(&inv, p); err == nil {
+		t.Fatal("expected error")
+	}
+}

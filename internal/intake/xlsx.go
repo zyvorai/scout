@@ -255,8 +255,8 @@ func readSheet(r io.Reader, shared []string) ([]map[string]string, error) {
 				val.Reset()
 			case "t":
 				if cellType == "inlineStr" {
+					// Rich-text cells hold several <t> runs; keep appending.
 					inInline = true
-					val.Reset()
 				}
 			}
 		case xml.EndElement:
