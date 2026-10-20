@@ -51,6 +51,9 @@ func MergeAssumptions(inv *model.Inventory, path string) error {
 	if a.IncludedDiskGiB != nil && *a.IncludedDiskGiB < 0 {
 		return fmt.Errorf("includedDiskGiB must be >= 0")
 	}
+	if a.IncludedMigrationVMs != nil && *a.IncludedMigrationVMs < 0 {
+		return fmt.Errorf("includedMigrationVMs must be >= 0")
+	}
 	inv.Assumptions = &a
 	return nil
 }

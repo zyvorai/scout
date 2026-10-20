@@ -44,9 +44,12 @@ func FromRVTools(path string, now time.Time) (model.Inventory, error) {
 	if !ok {
 		return model.Inventory{}, fmt.Errorf("rvtools export has no vInfo sheet")
 	}
+	// byName resolves name-keyed joins from other sheets; with duplicate names
+	// the first VM wins. vms keeps every VM so none is dropped or repeated.
 	byName := map[string]*model.VM{}
-	var order []string
-	var skippedTemplates int
+	var vms []*model.VM
+	var skippedTemplates, dupNames int
+	usedIDs := map[string]bool{}
 	env := ""
 	for i, row := range info.Rows {
 		if truthy(cell(row, "template")) {
@@ -62,8 +65,13 @@ func FromRVTools(path string, now time.Time) (model.Inventory, error) {
 			id = sanitizeID(name)
 		}
 		if _, exists := byName[strings.ToLower(name)]; exists {
+			dupNames++
 			id = fmt.Sprintf("%s-%d", id, i+1)
 		}
+		if usedIDs[id] {
+			id = fmt.Sprintf("%s-%d", id, i+1)
+		}
+		usedIDs[id] = true
 		osName := cell(row, "os according to the vmware tools", "os according to the configuration file", "guest os", "os")
 		mem := memoryMiB(row)
 		vm := &model.VM{
@@ -79,13 +87,18 @@ func FromRVTools(path string, now time.Time) (model.Inventory, error) {
 		if env == "" {
 			env = cell(row, "datacenter", "datacenter name")
 		}
-		byName[strings.ToLower(name)] = vm
-		order = append(order, strings.ToLower(name))
+		if _, exists := byName[strings.ToLower(name)]; !exists {
+			byName[strings.ToLower(name)] = vm
+		}
+		vms = append(vms, vm)
+	}
+	if dupNames > 0 {
+		warnings = append(warnings, fmt.Sprintf("%d vInfo rows share a VM name with an earlier row; disk, network, partition and snapshot rows are matched by name and attach to the first VM with that name", dupNames))
 	}
 	if skippedTemplates > 0 {
 		warnings = append(warnings, fmt.Sprintf("skipped %d template rows; templates are not migration workloads", skippedTemplates))
 	}
-	if len(order) == 0 {
+	if len(vms) == 0 {
 		return model.Inventory{}, fmt.Errorf("rvtools vInfo contained no virtual machines")
 	}
 
@@ -209,9 +222,9 @@ func FromRVTools(path string, now time.Time) (model.Inventory, error) {
 		storage = nil
 	}
 
-	vms := make([]model.VM, 0, len(order))
-	for _, key := range order {
-		vms = append(vms, *byName[key])
+	out := make([]model.VM, 0, len(vms))
+	for _, vm := range vms {
+		out = append(out, *vm)
 	}
 	if len(orphans) > 0 {
 		warnings = append(warnings, fmt.Sprintf("%d snapshot rows did not match a VM in vInfo and are treated as orphaned", len(orphans)))
@@ -220,7 +233,7 @@ func FromRVTools(path string, now time.Time) (model.Inventory, error) {
 		GeneratedAt:     now.UTC(),
 		Source:          "rvtools",
 		Environment:     firstNonEmpty(env, "RVTools export"),
-		VMs:             vms,
+		VMs:             out,
 		Storage:         storage,
 		ImportWarnings:  warnings,
 		OrphanSnapshots: orphans,
