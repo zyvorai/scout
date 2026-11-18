@@ -22,6 +22,8 @@
 
 📖 **[Read the full docs](https://zyvorai.github.io/scout/)** — quickstart, import formats, architecture, and API.
 
+[Client overview (PDF)](docs/Scout-Client-Overview.pdf)
+
 </div>
 
 > Scout assesses and plans. It does **not** modify source workloads or execute migrations.
