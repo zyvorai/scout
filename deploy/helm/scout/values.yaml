@@ -1,0 +1,85 @@
+# Default image; override for private registries.
+image:
+  repository: ghcr.io/zyvorai/scout
+  tag: "0.1.0"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+replicaCount: 1
+
+# Listen address inside the container. Bind all interfaces in-cluster.
+addr: ":18447"
+
+service:
+  type: ClusterIP
+  port: 18447
+  annotations: {}
+
+# Inventory JSON served by Scout. Prefer --set-file inventoryJson=./scout.json
+# or inventory.existingConfigMap when deploying real assessments.
+inventory:
+  # Mount path of the inventory file inside the container.
+  mountPath: /data
+  fileName: inventory.json
+  # Inline inventory (used when existingConfigMap is empty). Demo sample by default.
+  existingConfigMap: ""
+  # When empty, chart embeds values below. Keep small; use --set-file for real data.
+  json: ""
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  fsGroup: 65532
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+# Expose via Ingress only with TLS + auth at the edge.
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.kubernetes.io/ssl-redirect: "true"
+    # nginx.ingress.kubernetes.io/auth-type: basic
+    # nginx.ingress.kubernetes.io/auth-secret: scout-basic-auth
+  hosts:
+    - host: scout.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+    # - secretName: scout-tls
+    #   hosts:
+    #     - scout.example.com
+
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# Optional NetworkPolicy: allow ingress only from the ingress controller namespace.
+networkPolicy:
+  enabled: false
+  ingressNamespace: ingress-nginx

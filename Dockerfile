@@ -1,0 +1,13 @@
+# Copyright 2026 Zyvor AI Labs · https://zyvor.dev
+# SPDX-License-Identifier: LicenseRef-Zyvor-Production-1.0
+FROM golang:1.27.1-alpine AS build
+WORKDIR /src
+COPY . .
+RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/scout ./cmd/scout
+
+FROM gcr.io/distroless/static-debian12:nonroot
+COPY --from=build /out/scout /scout
+USER nonroot:nonroot
+EXPOSE 18447
+ENTRYPOINT ["/scout"]
+CMD ["serve", "--file", "/data/inventory.json", "--addr", ":18447"]

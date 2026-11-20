@@ -1,0 +1,16 @@
+apiVersion: v2
+name: scout
+description: Zyvor Scout — read-only migration discovery and readiness dashboard
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+home: https://github.com/zyvorai/scout
+sources:
+  - https://github.com/zyvorai/scout
+keywords:
+  - migration
+  - assessment
+  - kubevirt
+  - vmware
+maintainers:
+  - name: Zyvor AI Labs
