@@ -1,5 +1,5 @@
 # Copyright 2026 Zyvor AI Labs · https://zyvor.dev
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: LicenseRef-Zyvor-Production-1.0
 
 # Read-only collector for Scout's storage.json.
 # Run this on a machine that can already see Ceph, ZFS, NFS, or Kubernetes.

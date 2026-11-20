@@ -1,5 +1,5 @@
 // Copyright 2026 Zyvor AI Labs · https://zyvor.dev
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: LicenseRef-Zyvor-Production-1.0
 
 // Package estate turns inventory evidence into the assessment sections that
 // are not per-VM compatibility rules: runway, DR, architecture, and TCO.

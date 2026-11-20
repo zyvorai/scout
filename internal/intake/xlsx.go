@@ -1,5 +1,5 @@
 // Copyright 2026 Zyvor AI Labs · https://zyvor.dev
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: LicenseRef-Zyvor-Production-1.0
 
 // Package intake reads customer exports that already sit on disk.
 // It does not dial vCenter, Ceph, or an API server, and it does not upload anything.
