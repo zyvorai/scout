@@ -254,7 +254,7 @@ See [docs/ROADMAP.md](docs/ROADMAP.md).
 |---|---|
 | **Scout** | Read-only discovery, readiness scoring and wave planning |
 | **[Transiva](https://github.com/zyvorai/zyvor-transiva)** | Discovers and exports VMs from VMware vSphere and Nutanix AHV, after the plan |
-| **[hyper2kvm](https://github.com/zyvorai/hyper2kvm)** | VM migration into KVM |
+| **[hyper2kvm](https://github.com/zyvorai/zyvor-h2kvm)** | VM migration into KVM |
 | **[GuestKit](https://github.com/zyvorai/zyvor-guestkit)** | Guest inspection; Scout marks Windows guests from RVTools for GuestKit inspection of VirtIO state |
 | **[Zorvia](https://github.com/zyvorai/zyvor-zorvia)** | KubeVirt VM platform, a migration target |
 
