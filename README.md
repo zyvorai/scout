@@ -22,8 +22,6 @@
 
 📖 **[Read the full docs](https://zyvorai.github.io/scout/)** — quickstart, import formats, architecture, and API.
 
-[Client overview (PDF)](docs/Scout-Client-Overview.pdf)
-
 </div>
 
 > Scout assesses and plans. It does **not** modify source workloads or execute migrations.
@@ -44,24 +42,6 @@
 Migration projects often begin with spreadsheets that hide the hard parts: RDM/shared disks, vTPM, Secure Boot, passthrough devices, snapshot chains, legacy guests, and application dependencies. Scout turns those facts into an explainable readiness score and an execution-oriented plan.
 
 ![Capabilities at a glance: Discover, Assess, Plan, Operate](docs/ux/readme-capabilities.jpg)
-
----
-
-## Scout vs RVTools + spreadsheets
-
-![Scout vs RVTools + spreadsheets: from an inventory export to a readiness plan](docs/ux/readme-vs.jpg)
-
-Scout does not replace RVTools; it can read the RVTools workbook and take the analysis from there.
-
-| | **Scout** | **RVTools + spreadsheets** (typical starting point) |
-|---|---|---|
-| Inventory | vCenter REST discovery, RVTools `.xlsx` import, or JSON | RVTools export of vSphere inventory to Excel |
-| Readiness | 14 explainable rules, Ready / Review / Blocked per VM | Reviewed by hand, column by column |
-| Blockers | RDM, shared disks, encryption, vTPM, Secure Boot, passthrough, snapshots, firmware, legacy OS, VirtIO | Whatever the reviewer checks for |
-| Dependencies and waves | Dependency graph and waves from the inventory's connections | Planned by hand |
-| Output | Dashboard, JSON API, HTML report, executive PDF, workbook | The spreadsheet |
-| Source access | Read-only; credentials never persisted | Read-only inventory export |
-| **Choose RVTools alone when** | | An inventory export is all you need and the team will do the readiness analysis by hand |
 
 ---
 
