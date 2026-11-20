@@ -94,7 +94,7 @@ const config: Config = {
           items: [
             {label: 'GitHub', href: 'https://github.com/zyvorai/scout'},
             {
-              label: 'License (Apache-2.0)',
+              label: 'License (Zyvor Production 1.0)',
               href: 'https://github.com/zyvorai/scout/blob/main/LICENSE',
             },
           ],
@@ -107,7 +107,7 @@ const config: Config = {
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} Zyvor AI Labs. Scout is Apache-2.0 licensed.`,
+      copyright: `Copyright © ${new Date().getFullYear()} Zyvor AI Labs. Scout is licensed under the Zyvor Production License v1.0.`,
     },
     prism: {
       theme: prismThemes.github,

@@ -1,6 +1,6 @@
 # Scout: support subscriptions
 
-Scout is open-source software. It is free to use under its open-source licence, and that does not change.
+Scout is source-available software. Non-production use is free under the Zyvor Production License v1.0; production use requires a commercial license (sales@zyvor.dev).
 
 Teams that want supported releases and defined response targets can buy an annual **support subscription** from Zyvor.
 
@@ -17,7 +17,7 @@ Rates are below.
 
 ## Prices
 
-Support is the Zyvor Support meter: one meter per worker node per year, covering all Apache-2.0 infrastructure on that node (no stacking of per-product support).
+Support is the Zyvor Support meter: one meter per worker node per year, covering all Zyvor infrastructure software on that node (no stacking of per-product support).
 
 | Plan | USD, excl. tax | India, INR incl. 18% GST | Annual minimum (USD / India INR) |
 |------|----------------|--------------------------|----------------------------------|
@@ -28,13 +28,13 @@ Volume ladder on per-node list prices: 256-499 nodes -10%, 500-999 -15%, 1,000+ 
 
 Prices: INR incl. 18% GST in India; US dollars excl. tax elsewhere (VAT, GST or sales tax added where applicable). Pay online by UPI, card or netbanking where a buy page exists; international cards work (charged in rupees); or request a US-dollar invoice by bank transfer. Custom pricing: contact [sales@zyvor.dev](mailto:sales@zyvor.dev).
 
-Buy / get a quote: <https://zyvor.dev/buy>. A 30-day trial key is available for production licences; the Apache-2.0 software itself stays free ([30-day PoC](https://zyvor.dev/poc)).
+Buy / get a quote: <https://zyvor.dev/buy>. A 30-day trial key is available for production licences; production use of the software is licensed separately under the Zyvor Production License v1.0 ([30-day PoC](https://zyvor.dev/poc)).
 
 ## Terms
 
 - Annual prepaid subscription is the default, with a 12-month minimum. Multi-year prepay is available.
 - Minimums apply after any discounts.
 - Implementation, migration, training and managed operations are separate services.
-- At expiry, updates, downloads and support end. Open-source rights, where they apply, continue under the licence.
+- At expiry, updates, downloads and support end. Rights under the Zyvor Production License v1.0 continue as stated in that license.
 - Response targets need a contracted scope and are not uptime guarantees.
 - Existing signed agreements keep their agreed terms.

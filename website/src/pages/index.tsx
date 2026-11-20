@@ -21,7 +21,7 @@ function HomepageHeader() {
             before migration risk.
           </Heading>
           <p className="hero__subtitle">
-            Zyvor Scout is an Apache-2.0, read-only assessment tool for
+            Zyvor Scout is a source-available, read-only assessment tool for
             infrastructure teams planning migrations from virtualized
             environments to KVM/KubeVirt and other open platforms. It
             discovers or imports VM inventory, explains blockers, maps
@@ -99,7 +99,7 @@ function TrustBand() {
               Read-only, and honest about scope
             </Heading>
             <p>
-              Apache-2.0. Single Go binary, no JavaScript build chain — the
+              Zyvor Production License. Single Go binary, no JavaScript build chain — the
               dashboard is compiled in via <code>go:embed</code>. Security
               headers and localhost-by-default web binding out of the box.
               Real GitHub Actions CI on every push (gofmt, build, unit and
@@ -113,8 +113,8 @@ function TrustBand() {
               alt="CI status"
             />
             <img
-              src="https://img.shields.io/badge/license-Apache--2.0-blue.svg"
-              alt="Apache 2.0 license"
+              src="https://img.shields.io/badge/license-Zyvor%20Production%201.0-blue.svg"
+              alt="Zyvor Production License v1.0"
             />
           </div>
         </Reveal>
@@ -132,8 +132,8 @@ function EnterpriseCTA() {
             Need production support or SLAs?
           </Heading>
           <p className={styles.enterpriseCopy}>
-            Scout's core is Apache-2.0 and free to run in personal, lab, and
-            commercial production use at no charge. Zyvor Enterprise adds
+            Scout's core is under the Zyvor Production License: free for
+            non-production use, with production use under a commercial license. Zyvor Enterprise adds
             production support, SLAs, and additional products for teams
             that need them.
           </p>
@@ -152,7 +152,7 @@ export default function Home(): ReactNode {
   return (
     <Layout
       title="Zyvor Scout — migration discovery and readiness"
-      description="Apache-2.0, read-only assessment tool for infrastructure teams planning migrations from virtualized environments to KVM/KubeVirt and other open platforms.">
+      description="Source-available, read-only assessment tool for infrastructure teams planning migrations from virtualized environments to KVM/KubeVirt and other open platforms.">
       <HomepageHeader />
       <main>
         <ProblemStatement />
