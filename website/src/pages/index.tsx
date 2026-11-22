@@ -1,5 +1,5 @@
 // Copyright 2026 Zyvor AI Labs · https://zyvor.dev
-// SPDX-License-Identifier: LicenseRef-Zyvor-Production-1.0
+// SPDX-License-Identifier: LicenseRef-Zyvor-Production-2.0
 
 import type {ReactNode} from 'react';
 import clsx from 'clsx';
@@ -102,7 +102,7 @@ function TrustBand() {
               Read-only, and honest about scope
             </Heading>
             <p>
-              Zyvor Production License. Single Go binary, no JavaScript build chain — the
+              Zyvor Production Licence. Single Go binary, no JavaScript build chain — the
               dashboard is compiled in via <code>go:embed</code>. Security
               headers and localhost-by-default web binding out of the box.
               Real GitHub Actions CI on every push (gofmt, build, unit and
@@ -116,8 +116,8 @@ function TrustBand() {
               alt="CI status"
             />
             <img
-              src="https://img.shields.io/badge/license-Zyvor%20Production%201.0-blue.svg"
-              alt="Zyvor Production License v1.0"
+              src="https://img.shields.io/badge/license-Zyvor%20Production%20Licence%20v2.0-blue.svg"
+              alt="Zyvor Production Licence v2.0"
             />
           </div>
         </Reveal>
@@ -135,8 +135,9 @@ function EnterpriseCTA() {
             Need production support or SLAs?
           </Heading>
           <p className={styles.enterpriseCopy}>
-            Scout's core is under the Zyvor Production License: free for
-            non-production use, with production use under a commercial license. Zyvor Enterprise adds
+            Scout's core is under the Zyvor Production Licence v2.0. A 30-day trial
+            is available on request from sales@zyvor.dev (a paid evaluation Order
+            at no charge); production and any other use needs a paid Order. Zyvor Enterprise adds
             production support, SLAs, and additional products for teams
             that need them.
           </p>
