@@ -135,8 +135,9 @@ function EnterpriseCTA() {
             Need production support or SLAs?
           </Heading>
           <p className={styles.enterpriseCopy}>
-            Scout's core is under the Zyvor Production Licence: free for
-            non-production use, with production use under a commercial license. Zyvor Enterprise adds
+            Scout's core is under the Zyvor Production Licence v2.0. A 30-day trial
+            is available on request from sales@zyvor.dev (a paid evaluation Order
+            at no charge); production and any other use needs a paid Order. Zyvor Enterprise adds
             production support, SLAs, and additional products for teams
             that need them.
           </p>
