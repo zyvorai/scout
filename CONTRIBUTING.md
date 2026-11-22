@@ -6,4 +6,4 @@
 4. Keep provider-specific code behind the discovery interface.
 5. Never add credentials, exported user inventories, or proprietary compatibility data to tests.
 
-By contributing, you agree that your contribution is licensed under the Zyvor Production License v1.0.
+By contributing, you agree that your contribution is licensed under the Zyvor Production Licence v2.0.

@@ -1,5 +1,5 @@
 // Copyright 2026 Zyvor AI Labs · https://zyvor.dev
-// SPDX-License-Identifier: LicenseRef-Zyvor-Production-1.0
+// SPDX-License-Identifier: LicenseRef-Zyvor-Production-2.0
 
 import {themes as prismThemes} from 'prism-react-renderer';
 import type {Config} from '@docusaurus/types';
@@ -97,7 +97,7 @@ const config: Config = {
           items: [
             {label: 'GitHub', href: 'https://github.com/zyvorai/scout'},
             {
-              label: 'License (Zyvor Production 1.0)',
+              label: 'License (Zyvor Production Licence v2.0)',
               href: 'https://github.com/zyvorai/scout/blob/main/LICENSE',
             },
           ],
@@ -110,7 +110,7 @@ const config: Config = {
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} Zyvor AI Labs. Scout is licensed under the Zyvor Production License v1.0.`,
+      copyright: `Copyright © ${new Date().getFullYear()} Zyvor AI Labs. Scout is licensed under the Zyvor Production Licence v2.0.`,
     },
     prism: {
       theme: prismThemes.github,
