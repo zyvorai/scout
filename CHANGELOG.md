@@ -12,7 +12,10 @@
 
 - Wave-plan validator and what-if: `scout plan --validate plan.json [--move vm=wave] [--format text]`, `--draft`, `POST /api/v1/plan/validate`, `GET /api/v1/plan/draft`. Format `scout-plan/1` (see docs/API.md). Exits 1 on errors.
 
+- Import hardening and two documented generic formats: `scout import --csv` (header contract) and `--scout-json` (`scout-inventory/1`, schema in docs/scout-inventory-1.schema.json), with `--validate` for line-numbered, capped error reports (exit 1 on errors). Samples: sample/inventory.csv, sample/estate-issues.json. RVTools import now keeps `VM UUID` and the disk `Path`.
+
 ### Fixes
+- Inventory decode rejects trailing data after the JSON document and unsupported `schema` values.
 - `POST /api/v1/plan`, `/api/v1/analyze` and the new endpoints reject trailing data after the JSON document.
 - Workbook and findings CSV cells beginning with `=`, `+`, `-`, `@` are now neutralised (spreadsheet formula injection via VM names).
 

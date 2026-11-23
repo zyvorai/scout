@@ -10,6 +10,7 @@ This roadmap describes likely public work and is not a release commitment.
 - OpenStack connector
 - Hyper-V connector
 - OVF/OVA import adapters
+- Generic CSV and `scout-inventory/1` JSON import with validation (shipped; Live Optics and vCenter JSON remain unverified and unimplemented)
 
 ## Assessment
 

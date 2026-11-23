@@ -73,6 +73,7 @@ Usage:
   scout scan   --source demo --out scout.json
   scout scan   --source vmware --url https://vcenter.example --user admin --out scout.json
   scout import --rvtools rvtools.xlsx --storage storage.json --dr dr.yaml --assumptions assumptions.json --out scout.json
+  scout import --csv inventory.csv | --scout-json inventory.json [--validate] --out scout.json
   scout assess --file scout.json [--format json|sarif|csv]
   scout plan   --file scout.json [--link-mbps 1000 --max-concurrent 4 --window 240 --exclusive "db-1,db-2"]
   scout plan   --file scout.json --validate plan.json [--move vm=2] [--format text]   (--draft writes an editable plan)
@@ -280,16 +281,57 @@ func cmdImport(args []string) error {
 	storage := fs.String("storage", "", "local storage.json")
 	dr := fs.String("dr", "", "local dr.yaml")
 	assumptions := fs.String("assumptions", "", "local assumptions.json")
+	csvPath := fs.String("csv", "", "local CSV inventory (header contract in docs/IMPORT.md)")
+	scoutJSON := fs.String("scout-json", "", "local scout-inventory/1 JSON file (schema in docs/scout-inventory-1.schema.json)")
+	validate := fs.Bool("validate", false, "with --csv or --scout-json: check the file and report line-numbered problems; writes nothing, exits 1 on errors")
+	environment := fs.String("environment", "", "environment name for --csv imports")
 	out := fs.String("out", "scout.json", "output inventory JSON")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
-	if *rvtools == "" && *file == "" {
-		return fmt.Errorf("import requires --rvtools or --file")
+	sources := 0
+	for _, s := range []string{*rvtools, *file, *csvPath, *scoutJSON} {
+		if s != "" {
+			sources++
+		}
+	}
+	if sources == 0 {
+		return fmt.Errorf("import requires one of --rvtools, --csv, --scout-json or --file")
+	}
+	if sources > 1 {
+		return fmt.Errorf("choose only one of --rvtools, --csv, --scout-json and --file")
+	}
+	if *validate && *csvPath == "" && *scoutJSON == "" {
+		return fmt.Errorf("--validate supports --csv and --scout-json")
 	}
 	var inv model.Inventory
 	var err error
-	if *rvtools != "" {
+	if *csvPath != "" || *scoutJSON != "" {
+		path := *csvPath
+		var issues []intake.Issue
+		if *csvPath != "" {
+			inv, issues, err = intake.FromCSVFile(path, time.Time{})
+		} else {
+			path = *scoutJSON
+			inv, issues, err = intake.FromScoutJSONFile(path)
+		}
+		if err != nil {
+			return err
+		}
+		for _, i := range issues {
+			fmt.Fprintf(os.Stderr, "%s: %s\n", path, i)
+		}
+		if intake.HasErrors(issues) {
+			return fmt.Errorf("%s has errors; nothing was written", path)
+		}
+		if *validate {
+			fmt.Printf("%s: valid (%d VMs, %d warnings)\n", path, len(inv.VMs), len(issues))
+			return nil
+		}
+		if *environment != "" {
+			inv.Environment = *environment
+		}
+	} else if *rvtools != "" {
 		inv, err = intake.FromRVTools(*rvtools, time.Time{})
 		if err != nil {
 			return err

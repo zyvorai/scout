@@ -118,7 +118,7 @@ Visit `http://127.0.0.1:18447`.
 
 - Demo inventory for safe local evaluation
 - VMware vCenter REST discovery (session auth, no guessed fields)
-- Strict JSON inventory import
+- Strict JSON inventory import, a documented CSV format and a `scout-inventory/1` JSON schema, with `scout import --validate` for line-numbered errors
 - Local RVTools / storage / DR / TCO inputs ([docs/IMPORT.md](docs/IMPORT.md)) — files stay on the machine that runs Scout
 
 ### Assess

@@ -1,0 +1,4 @@
+name,id,os,cpus,memory_mib,firmware,tools_status,cbt_enabled,disk_gib,disk_datastores,networks,macs,ips
+app-01,vm-1,RHEL 9,4,8192,uefi,running,true,100,ds1,prod,00:50:56:aa:00:01,10.0.0.11
+db-01,vm-2,Ubuntu 24.04,8,32768,uefi,running,true,500;200,ds1;ds2,prod;backup,00:50:56:aa:00:02;00:50:56:aa:00:03,10.0.0.12;10.9.0.12
+cache-01,vm-3,RHEL 9,2,4096,bios,running,,50,ds1,prod,00:50:56:aa:00:01,10.0.0.13

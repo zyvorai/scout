@@ -30,6 +30,12 @@ func Decode(r io.Reader) (model.Inventory, error) {
 	if err := dec.Decode(&inv); err != nil {
 		return inv, fmt.Errorf("decode inventory: %w", err)
 	}
+	if dec.More() {
+		return inv, errors.New("decode inventory: unexpected data after the JSON document")
+	}
+	if inv.Schema != "" && inv.Schema != SchemaV1 {
+		return inv, fmt.Errorf("decode inventory: unsupported schema %q (want %q)", inv.Schema, SchemaV1)
+	}
 	if err := Validate(inv); err != nil {
 		return inv, err
 	}

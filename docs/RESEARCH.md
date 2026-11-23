@@ -46,7 +46,7 @@ Lacked: guest OS conversion support, virtual hardware version, CBT state (warm v
 | 5 | Duplicate MAC / UUID / name, missing datastore and network, shared-disk groups across waves (needs a cross-VM rule interface) | Built: `EstateRule` interface, 6 rules (duplicate IP is not built: IPs change at cutover and are often placeholders) |
 | 6 | Windows Fast Startup / hibernation, VSS state | Rejected: not present in any inventory export; needs guest inspection |
 | 7 | Disk size limits per target storage class (Azure-style) | Rejected: KubeVirt limits depend on the CSI driver, not a fixed number |
-| 8 | Live Optics / vCenter JSON import | Deferred: column and schema details were not verified from primary sources |
+| 8 | Live Optics / vCenter JSON import | Still deferred: formats not verified. Instead built a self-defined CSV format and `scout-inventory/1` JSON with a schema file |
 | 9 | Datastore-missing and illegal/locked disk concerns (MTV) | Missing datastore built as a cross-reference against the storage evidence; locked/illegal disk status still deferred (not in RVTools) |
 | 10 | Pluggable custom rules (Rego/ConfigMap style) | Deferred: Scout has no third-party dependencies, so it would need its own DSL |
 
