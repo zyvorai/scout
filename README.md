@@ -291,3 +291,17 @@ Read [SECURITY.md](SECURITY.md) before reporting vulnerabilities. Contributing: 
 [![Star on GitHub](https://img.shields.io/github/stars/zyvorai/scout?style=for-the-badge&logo=github&label=Star&color=2997ff)](https://github.com/zyvorai/scout)
 
 </div>
+
+## Optional: Gateway API front door (Setura)
+
+Besides the classic Ingress, the Helm chart can expose the service through a [Setura](https://github.com/zyvorai/zyvor-setura-gateway) Gateway API front door. It is off by default and the Ingress is unchanged.
+
+```sh
+# once per cluster: install the Setura controller
+setura gateway install --image ghcr.io/zyvorai/zyvor-setura-gateway:0.7.0 --namespace setura-system | kubectl apply -f -
+
+# then switch the chart from Ingress to Gateway (enable one, not both)
+helm upgrade --install scout deploy/helm/scout --set gateway.enabled=true --set ingress.enabled=false
+```
+
+The Gateway and HTTPRoute mirror the Ingress hosts, paths and backends. Set `gateway.tls.enabled=true` for an HTTPS listener.
