@@ -1,0 +1,30 @@
+{
+  "schema": "scout-plan/1",
+  "constraints": {
+    "cutoverMinutes": 15
+  },
+  "waves": [
+    {
+      "wave": 1,
+      "vms": [
+        "sap-app-01",
+        "postgres-01",
+        "redis-01",
+        "windows-ad-01",
+        "api-gw-01"
+      ]
+    },
+    {
+      "wave": 2,
+      "vms": [
+        "gpu-worker-01"
+      ]
+    },
+    {
+      "wave": 3,
+      "vms": [
+        "legacy-erp-01"
+      ]
+    }
+  ]
+}

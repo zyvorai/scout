@@ -9,7 +9,7 @@ Scout is deliberately a single-binary Go application with no JavaScript build ch
 - `internal/discovery` — source adapters. The `Discoverer` interface returns the common inventory model.
 - `internal/inventory` — strict JSON decode, validation, and persistence.
 - `internal/engine` — explainable compatibility rules and readiness scoring. `engine.go` holds the core rules and `target_rules.go` the virt-v2v / Forklift-derived rules (20 in total). `estate_rules.go` holds the second, cross-VM rule interface (6 more rules).
-- `internal/plan` — downtime/maintenance-window planner: warm vs cold copy time, concurrency batches, exclusive groups.
+- `internal/plan` — downtime/maintenance-window planner: warm vs cold copy time, concurrency batches, exclusive groups. `validate.go` checks user-edited plans and runs what-ifs.
 - `internal/graph` — dependency graph projection and migration-wave grouping.
 - `internal/report` — standalone, portable HTML report generation, workbook CSVs, SARIF 2.1.0 and findings CSV export (all CSV is formula-injection safe).
 - `internal/server` — JSON API, embedded dashboard, HTTP hardening.

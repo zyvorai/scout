@@ -183,7 +183,12 @@ func Build(inv model.Inventory, assessments []model.Assessment, c Constraints) (
 }
 
 func buildWave(n int, items []item, c Constraints, p *Plan) Wave {
-	// Largest first so big copies share batches with small ones deterministically.
+	return costWave(n, packBatches(items, c), c, p)
+}
+
+// packBatches groups a wave's items into concurrent batches. Largest first so
+// big copies share batches with small ones deterministically.
+func packBatches(items []item, c Constraints) [][]item {
 	sort.SliceStable(items, func(i, j int) bool { return items[i].gib > items[j].gib })
 	type batch struct {
 		items  []item
@@ -211,12 +216,22 @@ func buildWave(n int, items []item, c Constraints, p *Plan) Wave {
 			batches = append(batches, b)
 		}
 	}
-	w := Wave{Wave: n, VMs: len(items), Batches: []Batch{}}
-	var durations []int
+	out := make([][]item, len(batches))
 	for i, b := range batches {
+		out[i] = b.items
+	}
+	return out
+}
+
+// costWave computes downtime, windows and warnings for already-formed batches.
+func costWave(n int, batches [][]item, c Constraints, p *Plan) Wave {
+	w := Wave{Wave: n, Batches: []Batch{}}
+	var durations []int
+	for i, items := range batches {
 		bp := Batch{Index: i + 1}
-		share := float64(len(b.items)) // concurrent copies split the link
-		for _, it := range b.items {
+		share := float64(len(items)) // concurrent copies split the link
+		for _, it := range items {
+			w.VMs++
 			bp.VMs = append(bp.VMs, it.name)
 			bp.DataGiB += it.gib
 			w.DataGiB += it.gib

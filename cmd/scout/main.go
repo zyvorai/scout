@@ -11,6 +11,7 @@ import (
 	"io"
 	"log/slog"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -74,6 +75,7 @@ Usage:
   scout import --rvtools rvtools.xlsx --storage storage.json --dr dr.yaml --assumptions assumptions.json --out scout.json
   scout assess --file scout.json [--format json|sarif|csv]
   scout plan   --file scout.json [--link-mbps 1000 --max-concurrent 4 --window 240 --exclusive "db-1,db-2"]
+  scout plan   --file scout.json --validate plan.json [--move vm=2] [--format text]   (--draft writes an editable plan)
   scout report --file scout.json --out report.html --executive executive.html --pdf executive.pdf --workbook workbook.zip
   scout serve  --file scout.json --addr 127.0.0.1:18447
   scout version
@@ -164,8 +166,19 @@ func cmdPlan(args []string) error {
 	fs.IntVar(&c.CutoverMinutes, "cutover-minutes", 0, "per-VM cutover overhead (default from assumptions, else 15)")
 	fs.Float64Var(&c.DeltaPercent, "delta-percent", 0, "final warm sync as percent of data (default 5)")
 	exclusive := fs.String("exclusive", "", "VM ids or names that must not cut over together, comma separated; repeat groups with ';'")
+	validate := fs.String("validate", "", "validate a user-edited wave plan (scout-plan/1 JSON); exits 1 on errors")
+	draft := fs.Bool("draft", false, "print the automatic wave assignment as an editable scout-plan/1 file")
+	format := fs.String("format", "json", "output format for -validate: json or text")
+	var moves moveFlags
+	fs.Var(&moves, "move", "what-if with -validate: move a VM to a wave, as VM=WAVE (repeatable)")
 	if err := fs.Parse(args); err != nil {
 		return err
+	}
+	if *format != "json" && *format != "text" {
+		return fmt.Errorf("unknown --format %q (want json or text)", *format)
+	}
+	if len(moves) > 0 && *validate == "" {
+		return fmt.Errorf("-move requires -validate")
 	}
 	inv, err := inventory.Load(*file)
 	if err != nil {
@@ -190,11 +203,74 @@ func cmdPlan(args []string) error {
 		}
 	}
 	a := engine.Evaluate(inv)
+	if *draft {
+		return writeJSON(os.Stdout, plan.Draft(inv, a, c))
+	}
+	if *validate != "" {
+		return runValidate(inv, a, *validate, *format, moves)
+	}
 	p, err := plan.Build(inv, a, c)
 	if err != nil {
 		return err
 	}
 	return writeJSON(os.Stdout, p)
+}
+
+// moveFlags collects repeated -move VM=WAVE values.
+type moveFlags []plan.Move
+
+func (m *moveFlags) String() string { return fmt.Sprint(len(*m)) }
+
+func (m *moveFlags) Set(v string) error {
+	i := strings.LastIndex(v, "=")
+	if i <= 0 {
+		return fmt.Errorf("move %q must look like VM=WAVE", v)
+	}
+	n, err := strconv.Atoi(strings.TrimSpace(v[i+1:]))
+	if err != nil || n <= 0 {
+		return fmt.Errorf("move %q: wave must be a positive integer", v)
+	}
+	*m = append(*m, plan.Move{VM: strings.TrimSpace(v[:i]), ToWave: n})
+	return nil
+}
+
+var errPlanInvalid = fmt.Errorf("plan has errors")
+
+func runValidate(inv model.Inventory, a []model.Assessment, path, format string, moves moveFlags) error {
+	f, err := os.Open(path)
+	if err != nil {
+		return fmt.Errorf("open plan: %w", err)
+	}
+	defer f.Close()
+	e, err := plan.ParseEdited(f)
+	if err != nil {
+		return err
+	}
+	if len(moves) > 0 {
+		r, err := plan.WhatIf(inv, a, e, moves)
+		if err != nil {
+			return err
+		}
+		if format == "text" {
+			fmt.Print(r.Text())
+		} else if err := writeJSON(os.Stdout, r); err != nil {
+			return err
+		}
+		if !r.After.OK {
+			return errPlanInvalid
+		}
+		return nil
+	}
+	v := plan.Validate(inv, a, e)
+	if format == "text" {
+		fmt.Print(v.Text())
+	} else if err := writeJSON(os.Stdout, v); err != nil {
+		return err
+	}
+	if !v.OK {
+		return errPlanInvalid
+	}
+	return nil
 }
 
 func cmdImport(args []string) error {

@@ -34,6 +34,7 @@ This roadmap describes likely public work and is not a release commitment.
 
 - Capacity-aware wave packing
 - Maintenance-window, concurrency and exclusive-group constraints with warm/cold downtime estimates (shipped, `scout plan`)
+- Validator and what-if for user-edited wave plans (shipped, `scout plan --validate`)
 - Affinity/anti-affinity preservation
 - Site/rack/failure-domain constraints
 - Estimated transfer time by datastore and link capacity

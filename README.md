@@ -133,6 +133,7 @@ Visit `http://127.0.0.1:18447`.
 - Dependency graph of connected workloads
 - Migration waves that cut over together
 - Downtime and maintenance-window planner (`scout plan`): warm vs cold copy time, max concurrency, exclusive groups
+- Wave-plan validator and what-if (`scout plan --validate plan.json [--move vm=N]`): dependency order, exclusive groups, concurrency, window overruns, shared disks, with the VMs involved
 - SARIF 2.1.0 and spreadsheet-safe CSV findings export (`scout assess --format sarif|csv`)
 - Portable HTML assessment report, executive PDF, workbook export
 
@@ -185,6 +186,8 @@ When `scout serve` is running:
 | GET | `/api/v1/estate/findings` | Estate-level (cross-VM) findings grouped by rule |
 | GET | `/api/v1/estate` | Capacity, DR, architecture, TCO |
 | GET/POST | `/api/v1/plan` | Downtime and maintenance-window plan under constraints |
+| POST | `/api/v1/plan/validate` | Validate an edited wave plan, optional what-if moves |
+| GET | `/api/v1/plan/draft` | Automatic waves as an editable plan |
 | GET | `/api/v1/sarif` | Findings as SARIF 2.1.0 |
 | GET | `/api/v1/findings.csv` | Findings as spreadsheet-safe CSV |
 | GET | `/api/v1/report` | Portable HTML report |

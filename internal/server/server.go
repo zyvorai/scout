@@ -7,6 +7,7 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/fs"
 	"log/slog"
 	"net/http"
@@ -96,10 +97,8 @@ func (s Server) Handler() http.Handler {
 		r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 		defer r.Body.Close()
 		c := plan.FromInventory(s.Inventory)
-		dec := json.NewDecoder(r.Body)
-		dec.DisallowUnknownFields()
 		var in plan.Constraints
-		if err := dec.Decode(&in); err != nil {
+		if err := decodeStrict(r.Body, &in); err != nil {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 			return
 		}
@@ -125,13 +124,40 @@ func (s Server) Handler() http.Handler {
 		c.ExclusiveGroups = in.ExclusiveGroups
 		writePlan(w, s.Inventory, assessments, c)
 	})
+	mux.HandleFunc("GET /api/v1/plan/draft", func(w http.ResponseWriter, r *http.Request) {
+		writeJSON(w, http.StatusOK, plan.Draft(s.Inventory, assessments, plan.FromInventory(s.Inventory)))
+	})
+	mux.HandleFunc("POST /api/v1/plan/validate", func(w http.ResponseWriter, r *http.Request) {
+		r.Body = http.MaxBytesReader(w, r.Body, plan.MaxEditedBytes)
+		defer r.Body.Close()
+		var in struct {
+			Plan  plan.Edited `json:"plan"`
+			Moves []plan.Move `json:"moves"`
+		}
+		if err := decodeStrict(r.Body, &in); err != nil {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+			return
+		}
+		if in.Plan.Schema != "" && in.Plan.Schema != plan.EditedSchema {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "unsupported plan schema " + in.Plan.Schema})
+			return
+		}
+		if len(in.Moves) > 0 {
+			res, err := plan.WhatIf(s.Inventory, assessments, in.Plan, in.Moves)
+			if err != nil {
+				writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+				return
+			}
+			writeJSON(w, http.StatusOK, map[string]any{"validation": res.After, "whatIf": res})
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"validation": plan.Validate(s.Inventory, assessments, in.Plan)})
+	})
 	mux.HandleFunc("POST /api/v1/analyze", func(w http.ResponseWriter, r *http.Request) {
 		r.Body = http.MaxBytesReader(w, r.Body, 8<<20)
 		defer r.Body.Close()
 		var inv model.Inventory
-		dec := json.NewDecoder(r.Body)
-		dec.DisallowUnknownFields()
-		if err := dec.Decode(&inv); err != nil {
+		if err := decodeStrict(r.Body, &inv); err != nil {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 			return
 		}
@@ -152,6 +178,19 @@ func (s Server) Handler() http.Handler {
 
 func (s Server) HTTP(addr string) *http.Server {
 	return &http.Server{Addr: addr, Handler: s.Handler(), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 15 * time.Second, WriteTimeout: 30 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 1 << 20}
+}
+
+// decodeStrict decodes one JSON value, rejecting unknown fields and trailing data.
+func decodeStrict(r io.Reader, v any) error {
+	dec := json.NewDecoder(r)
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(v); err != nil {
+		return err
+	}
+	if dec.More() {
+		return fmt.Errorf("unexpected data after the JSON document")
+	}
+	return nil
 }
 
 func writePlan(w http.ResponseWriter, inv model.Inventory, a []model.Assessment, c plan.Constraints) {

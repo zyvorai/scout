@@ -60,6 +60,42 @@ curl -sS -X POST http://127.0.0.1:18447/api/v1/plan \
 
 CLI equivalent: `scout plan --file scout.json --link-mbps 1000 --max-concurrent 2 --window 180 --exclusive "db-1,db-2"`. The result is an estimate from disk sizes, not a measurement.
 
+## `POST /api/v1/plan/validate` and `GET /api/v1/plan/draft`
+
+Validate a hand-edited wave plan (the `scout-plan/1` format) and optionally run a what-if. `GET /api/v1/plan/draft` returns the automatic wave assignment as an editable plan.
+
+```json
+{
+  "schema": "scout-plan/1",
+  "constraints": {"maxConcurrent": 2, "windowMinutes": 180, "linkMbps": 1000, "exclusiveGroups": [["db-1", "db-2"]]},
+  "waves": [
+    {"wave": 1, "vms": ["db-1", "db-2"]},
+    {"wave": 2, "vms": ["app-1"], "batches": [["app-1"]]}
+  ],
+  "dependsOn": [{"vm": "app-1", "on": "db-1"}]
+}
+```
+
+VMs are referenced by id or name (names are case-insensitive; a name shared by several VMs is `ambiguous-vm`, use the id). `batches` are optional: without them Scout packs each wave with the planner, which already honours `maxConcurrent` and exclusive groups; with them they are checked as written. The request body is `{"plan": {...}, "moves": [{"vm": "db-1", "toWave": 2}]}`, capped at 8 MiB, strict (unknown fields and trailing data are 400). The response is `{"validation": {...}}`, plus `"whatIf"` when `moves` is present.
+
+`validation` has `ok` (no errors), `errors`, `warnings`, `violations` and `plan` (the downtime and window arithmetic of the edited plan). Each violation has `code`, `severity`, `wave`, `vms` (at most 100 listed) and `message`:
+
+| Code | Severity | Meaning |
+|---|---|---|
+| `dependency-order` | error | an inventory connection `from` -> `to` has the caller in an earlier wave than the dependency, or a `dependsOn` is violated. Convention: a VM must not move before the services it calls |
+| `dependency-split` | warning | connected VMs are in different waves but the dependency moves first |
+| `shared-disk-split` | error | VMs sharing a backing disk are not all in one wave |
+| `exclusive-group` | error | an explicit batch cuts over two members of an exclusive group together |
+| `concurrency` | error | an explicit batch is larger than `maxConcurrent` |
+| `window-overrun` | warning | a batch's estimated downtime exceeds `windowMinutes` |
+| `blocked-vm` | error | a blocked VM is scheduled |
+| `unplanned-vm` | warning | a non-blocked VM is in no wave |
+| `unknown-vm`, `ambiguous-vm`, `duplicate-assignment`, `invalid-wave`, `duplicate-wave`, `batch-mismatch`, `invalid-constraints` | error | the plan file itself is inconsistent |
+
+`whatIf` reports `before` and `after` validations, the violations `resolved` and `introduced` by the moves, `downtimeMinutesDelta`, `windowsDelta`, the resulting `edited` plan and `notes` (for example that explicit batches of a touched wave were dropped and re-packed). Moves of unknown VMs are skipped with a note.
+
+CLI: `scout plan --file scout.json --draft > plan.json`, then `scout plan --file scout.json --validate plan.json [--format text]` (exit status 1 when there are errors, so it works in CI), and `--move db-1=2` (repeatable) for a what-if.
+
 ## `GET /api/v1/sarif`
 
 Findings as SARIF 2.1.0 (`application/sarif+json`) for CI and code-scanning tools. blocker maps to `error`, warning to `warning`, info to `note`. Each VM is a logical location. CLI: `scout assess --format sarif`.
