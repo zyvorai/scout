@@ -177,44 +177,53 @@ func Assess(inv model.Inventory, rules []Rule) []model.Assessment {
 	}
 	out := make([]model.Assessment, 0, len(inv.VMs))
 	for _, vm := range inv.VMs {
-		score := 100
 		findings := make([]model.Finding, 0)
-		blocker := false
-		warning := false
 		for _, r := range rules {
 			if f := r.Evaluate(vm); f != nil {
 				if f.Basis == "" {
 					f.Basis = model.BasisMeasured
 				}
 				findings = append(findings, *f)
-				score -= f.Penalty
-				if f.Severity == model.SeverityBlocker {
-					blocker = true
-				}
-				if f.Severity == model.SeverityWarning {
-					warning = true
-				}
 			}
 		}
-		if score < 0 {
-			score = 0
-		}
-		status := "ready"
-		if blocker {
-			status = "blocked"
-		} else if score < 90 || warning {
-			status = "review"
-		}
-		sort.SliceStable(findings, func(i, j int) bool {
-			order := map[model.Severity]int{model.SeverityBlocker: 0, model.SeverityWarning: 1, model.SeverityInfo: 2}
-			if order[findings[i].Severity] != order[findings[j].Severity] {
-				return order[findings[i].Severity] < order[findings[j].Severity]
-			}
-			return findings[i].RuleID < findings[j].RuleID
-		})
-		out = append(out, model.Assessment{VMID: vm.ID, VMName: vm.Name, Score: score, Status: status, Findings: findings})
+		a := model.Assessment{VMID: vm.ID, VMName: vm.Name, Findings: findings}
+		rescore(&a)
+		out = append(out, a)
 	}
 	return out
+}
+
+// rescore sorts the findings and recomputes score and status from them. It is
+// shared by the per-VM pass and the estate pass so both apply one scoring rule.
+func rescore(a *model.Assessment) {
+	score := 100
+	blocker, warning := false, false
+	for _, f := range a.Findings {
+		score -= f.Penalty
+		switch f.Severity {
+		case model.SeverityBlocker:
+			blocker = true
+		case model.SeverityWarning:
+			warning = true
+		}
+	}
+	if score < 0 {
+		score = 0
+	}
+	a.Score = score
+	a.Status = "ready"
+	if blocker {
+		a.Status = "blocked"
+	} else if score < 90 || warning {
+		a.Status = "review"
+	}
+	order := map[model.Severity]int{model.SeverityBlocker: 0, model.SeverityWarning: 1, model.SeverityInfo: 2}
+	sort.SliceStable(a.Findings, func(i, j int) bool {
+		if order[a.Findings[i].Severity] != order[a.Findings[j].Severity] {
+			return order[a.Findings[i].Severity] < order[a.Findings[j].Severity]
+		}
+		return a.Findings[i].RuleID < a.Findings[j].RuleID
+	})
 }
 
 func Summary(inv model.Inventory, assessments []model.Assessment) model.Summary {

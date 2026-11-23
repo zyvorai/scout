@@ -217,3 +217,18 @@ footer{
   .graph-card{min-height:430px}
   #dependencyGraph{height:405px}
 }
+
+/* estate findings, plan check, diff */
+.tool-card{background:white;border:1px solid #e5ddd6;border-radius:24px;padding:24px}
+.tool-label{display:block;margin:14px 0 6px;font-size:13px;font-weight:700}
+.tool-label:first-child{margin-top:0}
+.tool-text,.tool-input{width:100%;box-sizing:border-box;border:1px solid #e5ddd6;border-radius:14px;padding:11px 13px;font-size:14px;background:#fff}
+.tool-text{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;line-height:1.5;resize:vertical}
+.tool-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.tool-result{margin-top:18px}
+.tool-summary{font-size:15px;font-weight:700;margin-bottom:6px}
+.tool-summary.ok{color:var(--green)}.tool-summary.bad{color:var(--red)}
+.chip-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.delta-up{color:var(--green)}.delta-down{color:var(--red)}
+.estate-group{background:white;border:1px solid #e5ddd6;border-radius:24px;padding:22px;margin-bottom:16px}
+.estate-group h3{margin:0 0 4px;font-size:19px}

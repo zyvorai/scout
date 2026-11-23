@@ -18,7 +18,7 @@
 
 **Migration discovery and readiness before migration risk.** Zyvor Scout is a read-only assessment tool for teams planning migrations from virtualized estates to KVM/KubeVirt and other open platforms. It discovers or imports VM inventory, evaluates compatibility, explains blockers, maps dependencies, groups workloads into migration waves, and serves a polished local dashboard from one Go binary.
 
-**20 readiness rules** · **Ready · Review · Blocked** · **Migration waves** · **Read-only, files stay local** · **One Go binary, no third-party dependencies**
+**26 readiness rules** (20 per-VM + 6 estate-level) · **Ready · Review · Blocked** · **Migration waves** · **Read-only, files stay local** · **One Go binary, no third-party dependencies**
 
 📖 **[Read the full docs](https://zyvorai.github.io/scout/)** — quickstart, import formats, architecture, and API.
 
@@ -118,7 +118,7 @@ Visit `http://127.0.0.1:18447`.
 
 - Demo inventory for safe local evaluation
 - VMware vCenter REST discovery (session auth, no guessed fields)
-- Strict JSON inventory import
+- Strict JSON inventory import, a documented CSV format and a `scout-inventory/1` JSON schema, with `scout import --validate` for line-numbered errors
 - Local RVTools / storage / DR / TCO inputs ([docs/IMPORT.md](docs/IMPORT.md)) — files stay on the machine that runs Scout
 
 ### Assess
@@ -126,12 +126,16 @@ Visit `http://127.0.0.1:18447`.
 - Explainable compatibility rule engine
 - Ready / Review / Blocked classification
 - Rules for encryption, RDM, shared disks, vTPM, Secure Boot, snapshots, GPU/PCI/USB/SR-IOV passthrough, guest tools, firmware, legacy OS, guest OS conversion support, hardware version, CBT/warm-migration limits, independent disks, legacy NICs
+- Estate-level rules that see the whole inventory: duplicate MAC / UUID / name, VMs on datastores or networks missing from the inventory, shared-disk groups split across waves
 
 ### Plan
 
+- Dashboard sections for estate-level findings, the wave-plan validator with what-if, and the readiness diff (all escaped, no build step)
 - Dependency graph of connected workloads
 - Migration waves that cut over together
 - Downtime and maintenance-window planner (`scout plan`): warm vs cold copy time, max concurrency, exclusive groups
+- Wave-plan validator and what-if (`scout plan --validate plan.json [--move vm=N]`): dependency order, exclusive groups, concurrency, window overruns, shared disks, with the VMs involved
+- Read-only readiness diff (`scout diff old.json new.json --fail-on regression`): verdict changes, rules that started or stopped firing, score deltas, CI exit status
 - SARIF 2.1.0 and spreadsheet-safe CSV findings export (`scout assess --format sarif|csv`)
 - Portable HTML assessment report, executive PDF, workbook export
 
@@ -168,7 +172,7 @@ Every VM begins at 100. Rules emit one of three finding levels:
 - **warning** — needs review or remediation
 - **blocker** — excludes the workload from migration waves until resolved
 
-Rules live in `internal/engine/engine.go` and are intentionally simple to extend.
+Per-VM rules live in `internal/engine/engine.go` and `target_rules.go`; estate-level rules (which see every VM) live in `internal/engine/estate_rules.go`. Both are intentionally simple to extend.
 
 ## API
 
@@ -181,8 +185,12 @@ When `scout serve` is running:
 | GET | `/api/v1/assessments` | Per-VM readiness |
 | GET | `/api/v1/summary` | Aggregate readiness |
 | GET | `/api/v1/graph` | Dependency graph |
+| GET | `/api/v1/estate/findings` | Estate-level (cross-VM) findings grouped by rule |
 | GET | `/api/v1/estate` | Capacity, DR, architecture, TCO |
 | GET/POST | `/api/v1/plan` | Downtime and maintenance-window plan under constraints |
+| POST | `/api/v1/plan/validate` | Validate an edited wave plan, optional what-if moves |
+| GET | `/api/v1/plan/draft` | Automatic waves as an editable plan |
+| POST | `/api/v1/diff` | Compare an older assessment with the current one |
 | GET | `/api/v1/sarif` | Findings as SARIF 2.1.0 |
 | GET | `/api/v1/findings.csv` | Findings as spreadsheet-safe CSV |
 | GET | `/api/v1/report` | Portable HTML report |

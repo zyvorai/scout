@@ -13,7 +13,6 @@ import (
 
 	"github.com/zyvorai/scout/internal/engine"
 	"github.com/zyvorai/scout/internal/estate"
-	"github.com/zyvorai/scout/internal/graph"
 	"github.com/zyvorai/scout/internal/model"
 )
 
@@ -27,8 +26,7 @@ type Data struct {
 }
 
 func Build(inv model.Inventory) Data {
-	a := engine.Assess(inv, nil)
-	a = graph.AssignWaves(inv, a)
+	a := engine.Evaluate(inv)
 	a, est := estate.Annotate(inv, a)
 	s := engine.Summary(inv, a)
 	payload, _ := json.Marshal(struct {

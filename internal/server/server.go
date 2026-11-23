@@ -7,12 +7,14 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/fs"
 	"log/slog"
 	"net/http"
 	"strconv"
 	"time"
 
+	"github.com/zyvorai/scout/internal/diff"
 	"github.com/zyvorai/scout/internal/engine"
 	"github.com/zyvorai/scout/internal/estate"
 	"github.com/zyvorai/scout/internal/graph"
@@ -35,10 +37,11 @@ type Server struct {
 
 func (s Server) Handler() http.Handler {
 	mux := http.NewServeMux()
-	assessments := graph.AssignWaves(s.Inventory, engine.Assess(s.Inventory, nil))
+	assessments := engine.Evaluate(s.Inventory)
 	assessments, est := estate.Annotate(s.Inventory, assessments)
 	summary := engine.Summary(s.Inventory, assessments)
 	depGraph := graph.Build(s.Inventory, assessments)
+	estateFindings := engine.EstateFindings(assessments)
 
 	mux.HandleFunc("GET /api/v1/healthz", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]any{"ok": true, "time": time.Now().UTC()})
@@ -47,6 +50,7 @@ func (s Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/v1/assessments", func(w http.ResponseWriter, r *http.Request) { writeJSON(w, http.StatusOK, assessments) })
 	mux.HandleFunc("GET /api/v1/summary", func(w http.ResponseWriter, r *http.Request) { writeJSON(w, http.StatusOK, summary) })
 	mux.HandleFunc("GET /api/v1/estate", func(w http.ResponseWriter, r *http.Request) { writeJSON(w, http.StatusOK, est) })
+	mux.HandleFunc("GET /api/v1/estate/findings", func(w http.ResponseWriter, r *http.Request) { writeJSON(w, http.StatusOK, estateFindings) })
 	mux.HandleFunc("GET /api/v1/graph", func(w http.ResponseWriter, r *http.Request) { writeJSON(w, http.StatusOK, depGraph) })
 	mux.HandleFunc("GET /api/v1/report", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -94,10 +98,8 @@ func (s Server) Handler() http.Handler {
 		r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 		defer r.Body.Close()
 		c := plan.FromInventory(s.Inventory)
-		dec := json.NewDecoder(r.Body)
-		dec.DisallowUnknownFields()
 		var in plan.Constraints
-		if err := dec.Decode(&in); err != nil {
+		if err := decodeStrict(r.Body, &in); err != nil {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 			return
 		}
@@ -123,13 +125,58 @@ func (s Server) Handler() http.Handler {
 		c.ExclusiveGroups = in.ExclusiveGroups
 		writePlan(w, s.Inventory, assessments, c)
 	})
+	mux.HandleFunc("GET /api/v1/plan/draft", func(w http.ResponseWriter, r *http.Request) {
+		writeJSON(w, http.StatusOK, plan.Draft(s.Inventory, assessments, plan.FromInventory(s.Inventory)))
+	})
+	mux.HandleFunc("POST /api/v1/plan/validate", func(w http.ResponseWriter, r *http.Request) {
+		r.Body = http.MaxBytesReader(w, r.Body, plan.MaxEditedBytes)
+		defer r.Body.Close()
+		var in struct {
+			Plan  plan.Edited `json:"plan"`
+			Moves []plan.Move `json:"moves"`
+		}
+		if err := decodeStrict(r.Body, &in); err != nil {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+			return
+		}
+		if in.Plan.Schema != "" && in.Plan.Schema != plan.EditedSchema {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "unsupported plan schema " + in.Plan.Schema})
+			return
+		}
+		if len(in.Moves) > 0 {
+			res, err := plan.WhatIf(s.Inventory, assessments, in.Plan, in.Moves)
+			if err != nil {
+				writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+				return
+			}
+			writeJSON(w, http.StatusOK, map[string]any{"validation": res.After, "whatIf": res})
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"validation": plan.Validate(s.Inventory, assessments, in.Plan)})
+	})
+	mux.HandleFunc("POST /api/v1/diff", func(w http.ResponseWriter, r *http.Request) {
+		// The body is the OLD assessment (scout assess output) or inventory; it
+		// is compared with what this server is currently serving.
+		r.Body = http.MaxBytesReader(w, r.Body, 8<<20)
+		defer r.Body.Close()
+		oldA, err := diff.Load(r.Body)
+		if err != nil {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+			return
+		}
+		res := diff.Compare(oldA, assessments)
+		gate, err := diff.Evaluate(res, r.URL.Query().Get("failOn"), assessments)
+		if err != nil {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"result": res, "gate": gate})
+	})
 	mux.HandleFunc("POST /api/v1/analyze", func(w http.ResponseWriter, r *http.Request) {
 		r.Body = http.MaxBytesReader(w, r.Body, 8<<20)
 		defer r.Body.Close()
 		var inv model.Inventory
-		dec := json.NewDecoder(r.Body)
-		dec.DisallowUnknownFields()
-		if err := dec.Decode(&inv); err != nil {
+		if err := decodeStrict(r.Body, &inv); err != nil {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 			return
 		}
@@ -137,9 +184,9 @@ func (s Server) Handler() http.Handler {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 			return
 		}
-		a := graph.AssignWaves(inv, engine.Assess(inv, nil))
+		a := engine.Evaluate(inv)
 		a, est := estate.Annotate(inv, a)
-		writeJSON(w, http.StatusOK, map[string]any{"summary": engine.Summary(inv, a), "assessments": a, "graph": graph.Build(inv, a), "estate": est})
+		writeJSON(w, http.StatusOK, map[string]any{"summary": engine.Summary(inv, a), "assessments": a, "graph": graph.Build(inv, a), "estate": est, "estateFindings": engine.EstateFindings(a)})
 	})
 
 	web, _ := fs.Sub(staticFS, "static")
@@ -150,6 +197,19 @@ func (s Server) Handler() http.Handler {
 
 func (s Server) HTTP(addr string) *http.Server {
 	return &http.Server{Addr: addr, Handler: s.Handler(), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 15 * time.Second, WriteTimeout: 30 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 1 << 20}
+}
+
+// decodeStrict decodes one JSON value, rejecting unknown fields and trailing data.
+func decodeStrict(r io.Reader, v any) error {
+	dec := json.NewDecoder(r)
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(v); err != nil {
+		return err
+	}
+	if dec.More() {
+		return fmt.Errorf("unexpected data after the JSON document")
+	}
+	return nil
 }
 
 func writePlan(w http.ResponseWriter, inv model.Inventory, a []model.Assessment, c plan.Constraints) {

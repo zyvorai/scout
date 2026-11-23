@@ -11,9 +11,11 @@ import (
 	"io"
 	"log/slog"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/zyvorai/scout/internal/diff"
 	"github.com/zyvorai/scout/internal/discovery"
 	"github.com/zyvorai/scout/internal/engine"
 	"github.com/zyvorai/scout/internal/estate"
@@ -40,6 +42,8 @@ func main() {
 		err = cmdScan(os.Args[2:])
 	case "import":
 		err = cmdImport(os.Args[2:])
+	case "diff":
+		err = cmdDiff(os.Args[2:])
 	case "plan":
 		err = cmdPlan(os.Args[2:])
 	case "assess":
@@ -72,8 +76,11 @@ Usage:
   scout scan   --source demo --out scout.json
   scout scan   --source vmware --url https://vcenter.example --user admin --out scout.json
   scout import --rvtools rvtools.xlsx --storage storage.json --dr dr.yaml --assumptions assumptions.json --out scout.json
+  scout import --csv inventory.csv | --scout-json inventory.json [--validate] --out scout.json
   scout assess --file scout.json [--format json|sarif|csv]
+  scout diff   old.json new.json [--format text] [--fail-on regression,new-blocker,score-drop=5]
   scout plan   --file scout.json [--link-mbps 1000 --max-concurrent 4 --window 240 --exclusive "db-1,db-2"]
+  scout plan   --file scout.json --validate plan.json [--move vm=2] [--format text]   (--draft writes an editable plan)
   scout report --file scout.json --out report.html --executive executive.html --pdf executive.pdf --workbook workbook.zip
   scout serve  --file scout.json --addr 127.0.0.1:18447
   scout version
@@ -82,6 +89,7 @@ Commands:
   scan     Discover or generate an inventory
   import   Read local RVTools, storage.json, and dr.yaml. Nothing is uploaded.
   assess   Print readiness assessments as JSON, SARIF 2.1.0, or findings CSV
+  diff     Compare two assessments (or inventories): changed verdicts, rules that started or stopped firing, score deltas
   plan     Estimate downtime and maintenance windows per wave under constraints
   report   Write the HTML report, executive PDF, and CSV workbook
   serve    Start the embedded dashboard and JSON API (loopback by default)
@@ -139,7 +147,7 @@ func cmdAssess(args []string) error {
 	if err != nil {
 		return err
 	}
-	a := graph.AssignWaves(inv, engine.Assess(inv, nil))
+	a := engine.Evaluate(inv)
 	a, est := estate.Annotate(inv, a)
 	switch *format {
 	case "json":
@@ -150,7 +158,69 @@ func cmdAssess(args []string) error {
 	default:
 		return fmt.Errorf("unknown --format %q (want json, sarif, or csv)", *format)
 	}
-	return writeJSON(os.Stdout, map[string]any{"summary": engine.Summary(inv, a), "assessments": a, "graph": graph.Build(inv, a), "estate": est})
+	return writeJSON(os.Stdout, map[string]any{"summary": engine.Summary(inv, a), "assessments": a, "graph": graph.Build(inv, a), "estate": est, "estateFindings": engine.EstateFindings(a)})
+}
+
+func cmdDiff(args []string) error {
+	fs := flag.NewFlagSet("diff", flag.ContinueOnError)
+	format := fs.String("format", "json", "output format: json or text")
+	failOn := fs.String("fail-on", "", "exit 1 when: regression, new-blocker, score-drop=N (comma separated)")
+	// Accept the two files before or after the flags.
+	var files []string
+	rest := args
+	for {
+		if err := fs.Parse(rest); err != nil {
+			return err
+		}
+		if fs.NArg() == 0 {
+			break
+		}
+		files = append(files, fs.Arg(0))
+		rest = fs.Args()[1:]
+	}
+	if len(files) != 2 {
+		return fmt.Errorf("diff needs exactly two files: scout diff old.json new.json")
+	}
+	if *format != "json" && *format != "text" {
+		return fmt.Errorf("unknown --format %q (want json or text)", *format)
+	}
+	load := func(path string) ([]model.Assessment, error) {
+		f, err := os.Open(path)
+		if err != nil {
+			return nil, err
+		}
+		defer f.Close()
+		a, err := diff.Load(f)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", path, err)
+		}
+		return a, nil
+	}
+	oldA, err := load(files[0])
+	if err != nil {
+		return err
+	}
+	newA, err := load(files[1])
+	if err != nil {
+		return err
+	}
+	res := diff.Compare(oldA, newA)
+	gate, err := diff.Evaluate(res, *failOn, newA)
+	if err != nil {
+		return err
+	}
+	if *format == "text" {
+		fmt.Print(res.Text())
+		for _, r := range gate.Reasons {
+			fmt.Println("GATE FAILED: " + r)
+		}
+	} else if err := writeJSON(os.Stdout, map[string]any{"result": res, "gate": gate}); err != nil {
+		return err
+	}
+	if gate.Failed {
+		return fmt.Errorf("gate failed: %s", strings.Join(gate.Reasons, "; "))
+	}
+	return nil
 }
 
 func cmdPlan(args []string) error {
@@ -164,8 +234,19 @@ func cmdPlan(args []string) error {
 	fs.IntVar(&c.CutoverMinutes, "cutover-minutes", 0, "per-VM cutover overhead (default from assumptions, else 15)")
 	fs.Float64Var(&c.DeltaPercent, "delta-percent", 0, "final warm sync as percent of data (default 5)")
 	exclusive := fs.String("exclusive", "", "VM ids or names that must not cut over together, comma separated; repeat groups with ';'")
+	validate := fs.String("validate", "", "validate a user-edited wave plan (scout-plan/1 JSON); exits 1 on errors")
+	draft := fs.Bool("draft", false, "print the automatic wave assignment as an editable scout-plan/1 file")
+	format := fs.String("format", "json", "output format for -validate: json or text")
+	var moves moveFlags
+	fs.Var(&moves, "move", "what-if with -validate: move a VM to a wave, as VM=WAVE (repeatable)")
 	if err := fs.Parse(args); err != nil {
 		return err
+	}
+	if *format != "json" && *format != "text" {
+		return fmt.Errorf("unknown --format %q (want json or text)", *format)
+	}
+	if len(moves) > 0 && *validate == "" {
+		return fmt.Errorf("-move requires -validate")
 	}
 	inv, err := inventory.Load(*file)
 	if err != nil {
@@ -189,12 +270,75 @@ func cmdPlan(args []string) error {
 			c.ExclusiveGroups = append(c.ExclusiveGroups, group)
 		}
 	}
-	a := graph.AssignWaves(inv, engine.Assess(inv, nil))
+	a := engine.Evaluate(inv)
+	if *draft {
+		return writeJSON(os.Stdout, plan.Draft(inv, a, c))
+	}
+	if *validate != "" {
+		return runValidate(inv, a, *validate, *format, moves)
+	}
 	p, err := plan.Build(inv, a, c)
 	if err != nil {
 		return err
 	}
 	return writeJSON(os.Stdout, p)
+}
+
+// moveFlags collects repeated -move VM=WAVE values.
+type moveFlags []plan.Move
+
+func (m *moveFlags) String() string { return fmt.Sprint(len(*m)) }
+
+func (m *moveFlags) Set(v string) error {
+	i := strings.LastIndex(v, "=")
+	if i <= 0 {
+		return fmt.Errorf("move %q must look like VM=WAVE", v)
+	}
+	n, err := strconv.Atoi(strings.TrimSpace(v[i+1:]))
+	if err != nil || n <= 0 {
+		return fmt.Errorf("move %q: wave must be a positive integer", v)
+	}
+	*m = append(*m, plan.Move{VM: strings.TrimSpace(v[:i]), ToWave: n})
+	return nil
+}
+
+var errPlanInvalid = fmt.Errorf("plan has errors")
+
+func runValidate(inv model.Inventory, a []model.Assessment, path, format string, moves moveFlags) error {
+	f, err := os.Open(path)
+	if err != nil {
+		return fmt.Errorf("open plan: %w", err)
+	}
+	defer f.Close()
+	e, err := plan.ParseEdited(f)
+	if err != nil {
+		return err
+	}
+	if len(moves) > 0 {
+		r, err := plan.WhatIf(inv, a, e, moves)
+		if err != nil {
+			return err
+		}
+		if format == "text" {
+			fmt.Print(r.Text())
+		} else if err := writeJSON(os.Stdout, r); err != nil {
+			return err
+		}
+		if !r.After.OK {
+			return errPlanInvalid
+		}
+		return nil
+	}
+	v := plan.Validate(inv, a, e)
+	if format == "text" {
+		fmt.Print(v.Text())
+	} else if err := writeJSON(os.Stdout, v); err != nil {
+		return err
+	}
+	if !v.OK {
+		return errPlanInvalid
+	}
+	return nil
 }
 
 func cmdImport(args []string) error {
@@ -204,16 +348,57 @@ func cmdImport(args []string) error {
 	storage := fs.String("storage", "", "local storage.json")
 	dr := fs.String("dr", "", "local dr.yaml")
 	assumptions := fs.String("assumptions", "", "local assumptions.json")
+	csvPath := fs.String("csv", "", "local CSV inventory (header contract in docs/IMPORT.md)")
+	scoutJSON := fs.String("scout-json", "", "local scout-inventory/1 JSON file (schema in docs/scout-inventory-1.schema.json)")
+	validate := fs.Bool("validate", false, "with --csv or --scout-json: check the file and report line-numbered problems; writes nothing, exits 1 on errors")
+	environment := fs.String("environment", "", "environment name for --csv imports")
 	out := fs.String("out", "scout.json", "output inventory JSON")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
-	if *rvtools == "" && *file == "" {
-		return fmt.Errorf("import requires --rvtools or --file")
+	sources := 0
+	for _, s := range []string{*rvtools, *file, *csvPath, *scoutJSON} {
+		if s != "" {
+			sources++
+		}
+	}
+	if sources == 0 {
+		return fmt.Errorf("import requires one of --rvtools, --csv, --scout-json or --file")
+	}
+	if sources > 1 {
+		return fmt.Errorf("choose only one of --rvtools, --csv, --scout-json and --file")
+	}
+	if *validate && *csvPath == "" && *scoutJSON == "" {
+		return fmt.Errorf("--validate supports --csv and --scout-json")
 	}
 	var inv model.Inventory
 	var err error
-	if *rvtools != "" {
+	if *csvPath != "" || *scoutJSON != "" {
+		path := *csvPath
+		var issues []intake.Issue
+		if *csvPath != "" {
+			inv, issues, err = intake.FromCSVFile(path, time.Time{})
+		} else {
+			path = *scoutJSON
+			inv, issues, err = intake.FromScoutJSONFile(path)
+		}
+		if err != nil {
+			return err
+		}
+		for _, i := range issues {
+			fmt.Fprintf(os.Stderr, "%s: %s\n", path, i)
+		}
+		if intake.HasErrors(issues) {
+			return fmt.Errorf("%s has errors; nothing was written", path)
+		}
+		if *validate {
+			fmt.Printf("%s: valid (%d VMs, %d warnings)\n", path, len(inv.VMs), len(issues))
+			return nil
+		}
+		if *environment != "" {
+			inv.Environment = *environment
+		}
+	} else if *rvtools != "" {
 		inv, err = intake.FromRVTools(*rvtools, time.Time{})
 		if err != nil {
 			return err

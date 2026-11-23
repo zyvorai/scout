@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zyvorai/scout/docs/scout-inventory-1.schema.json",
+  "title": "scout-inventory/1",
+  "description": "Scout's generic inventory format. Unknown members are rejected by Scout. Optional members that are absent are treated as unknown, never as false or zero.",
+  "type": "object",
+  "required": ["schema", "vms"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "scout-inventory/1"},
+    "generatedAt": {"type": "string", "format": "date-time"},
+    "source": {"type": "string"},
+    "environment": {"type": "string"},
+    "vms": {"type": "array", "minItems": 1, "maxItems": 200000, "items": {"$ref": "#/$defs/vm"}},
+    "connections": {"type": "array", "maxItems": 1000000, "items": {"$ref": "#/$defs/connection"}},
+    "metadata": {"type": "object", "additionalProperties": {"type": "string"}},
+    "networks": {"type": "array", "items": {"type": "string", "maxLength": 1024}, "description": "Network names present in the source environment. When present, NICs on other networks raise missing-network."},
+    "storage": {"type": "object", "description": "Capacity evidence; datastores listed here enable the missing-datastore check. See docs/IMPORT.md."},
+    "dr": {"type": "object"},
+    "assumptions": {"type": "object"},
+    "importWarnings": {"type": "array", "items": {"type": "string"}},
+    "orphanSnapshots": {"type": "array", "items": {"$ref": "#/$defs/snapshot"}}
+  },
+  "$defs": {
+    "vm": {
+      "type": "object",
+      "required": ["id", "name"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string", "minLength": 1, "maxLength": 1024, "description": "Unique within the file."},
+        "name": {"type": "string", "minLength": 1, "maxLength": 1024},
+        "uuid": {"type": "string", "maxLength": 1024},
+        "os": {"type": "string", "maxLength": 1024},
+        "cpus": {"type": "integer", "minimum": 0},
+        "memoryMiB": {"type": "integer", "minimum": 0},
+        "powerState": {"type": "string"},
+        "firmware": {"type": "string", "description": "bios or uefi (efi accepted)."},
+        "secureBoot": {"type": "boolean"},
+        "tpm": {"type": "boolean"},
+        "encrypted": {"type": "boolean"},
+        "snapshots": {"type": "integer", "minimum": 0},
+        "toolsStatus": {"type": "string"},
+        "hwVersion": {"type": "integer", "minimum": 0},
+        "cbtEnabled": {"type": "boolean", "description": "Omit when unknown."},
+        "gpu": {"type": "boolean"},
+        "sriov": {"type": "boolean"},
+        "usbPassthrough": {"type": "boolean"},
+        "pciPassthrough": {"type": "boolean"},
+        "sharedDisks": {"type": "boolean"},
+        "rdm": {"type": "boolean"},
+        "disks": {"type": "array", "maxItems": 1000, "items": {"$ref": "#/$defs/disk"}},
+        "nics": {"type": "array", "maxItems": 256, "items": {"$ref": "#/$defs/nic"}},
+        "snapshotDetails": {"type": "array", "items": {"$ref": "#/$defs/snapshot"}},
+        "partitions": {"type": "array", "items": {"$ref": "#/$defs/partition"}},
+        "tags": {"type": "object", "additionalProperties": {"type": "string"}}
+      }
+    },
+    "disk": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string"},
+        "sizeGiB": {"type": "integer", "minimum": 0},
+        "format": {"type": "string"},
+        "shared": {"type": "boolean"},
+        "rdm": {"type": "boolean"},
+        "mode": {"type": "string"},
+        "datastore": {"type": "string", "maxLength": 1024},
+        "backing": {"type": "string", "maxLength": 1024, "description": "Backing file path. The same datastore and path on several VMs means one shared disk."}
+      }
+    },
+    "nic": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string"},
+        "network": {"type": "string", "maxLength": 1024},
+        "mac": {"type": "string", "description": "Six hex octets: aa:bb:.., aa-bb-.., aabb.ccdd.eeff or aabbccddeeff."},
+        "ip": {"type": "string", "description": "IPv4 or IPv6 address."},
+        "vlan": {"type": "integer", "minimum": 0, "maximum": 4094},
+        "sriov": {"type": "boolean"},
+        "type": {"type": "string"}
+      }
+    },
+    "connection": {
+      "type": "object",
+      "required": ["from", "to"],
+      "additionalProperties": false,
+      "properties": {
+        "from": {"type": "string", "description": "VM id of the caller."},
+        "to": {"type": "string", "description": "VM id of the dependency."},
+        "protocol": {"type": "string"},
+        "port": {"type": "integer", "minimum": 0, "maximum": 65535},
+        "bytes": {"type": "integer", "minimum": 0}
+      }
+    },
+    "snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {"type": "string"},
+        "createdAt": {"type": "string", "format": "date-time"},
+        "sizeBytes": {"type": "integer", "minimum": 0},
+        "orphan": {"type": "boolean"},
+        "aged": {"type": "boolean"}
+      }
+    },
+    "partition": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "disk": {"type": "string"},
+        "capacityBytes": {"type": "integer", "minimum": 0},
+        "freeBytes": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}

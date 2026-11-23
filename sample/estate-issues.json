@@ -1,0 +1,20 @@
+{
+  "schema": "scout-inventory/1",
+  "generatedAt": "2026-11-01T00:00:00Z",
+  "source": "sample",
+  "environment": "Estate rule demo",
+  "networks": ["prod"],
+  "storage": {"datastores": [{"name": "ds1", "capacityBytes": 1099511627776, "freeBytes": 549755813888}]},
+  "vms": [
+    {"id": "n1", "name": "rac-node-1", "uuid": "4200-aaaa", "os": "RHEL 9", "firmware": "uefi", "toolsStatus": "running",
+     "disks": [{"id": "d1", "sizeGiB": 200, "datastore": "ds1", "backing": "[ds1] rac/shared.vmdk"}],
+     "nics": [{"id": "n", "network": "prod", "mac": "00:50:56:aa:01:01"}]},
+    {"id": "n2", "name": "rac-node-2", "uuid": "4200-aaaa", "os": "RHEL 9", "firmware": "uefi", "toolsStatus": "running", "rdm": true,
+     "disks": [{"id": "d1", "sizeGiB": 200, "datastore": "ds1", "backing": "[ds1] rac/shared.vmdk"}],
+     "nics": [{"id": "n", "network": "prod", "mac": "00:50:56:aa:01:01"}]},
+    {"id": "w1", "name": "web-01", "os": "RHEL 9", "firmware": "uefi", "toolsStatus": "running",
+     "disks": [{"id": "d1", "sizeGiB": 40, "datastore": "ds-retired"}],
+     "nics": [{"id": "n", "network": "dmz"}]},
+    {"id": "w2", "name": "WEB-01", "os": "RHEL 9", "firmware": "uefi", "toolsStatus": "running"}
+  ]
+}

@@ -8,7 +8,19 @@
 - SARIF 2.1.0 and findings CSV export: `scout assess --format sarif|csv`, `/api/v1/sarif`, `/api/v1/findings.csv`.
 - Research notes: docs/RESEARCH.md.
 
+- Estate-level rules: a second rule interface (`engine.EstateRule`) that sees the whole inventory and the assigned waves, with six rules (20 -> 26): `duplicate-mac`, `duplicate-uuid`, `duplicate-name`, `missing-datastore`, `missing-network`, `shared-disk-split`. `GET /api/v1/estate/findings`, `estateFindings` in `scout assess`/`analyze`. New optional inventory fields: VM `uuid`, disk `backing`, top-level `networks`. VMs sharing a backing disk are now assigned to the same wave. `engine.Evaluate` is the single assess pipeline.
+
+- Wave-plan validator and what-if: `scout plan --validate plan.json [--move vm=wave] [--format text]`, `--draft`, `POST /api/v1/plan/validate`, `GET /api/v1/plan/draft`. Format `scout-plan/1` (see docs/API.md). Exits 1 on errors.
+
+- Import hardening and two documented generic formats: `scout import --csv` (header contract) and `--scout-json` (`scout-inventory/1`, schema in docs/scout-inventory-1.schema.json), with `--validate` for line-numbered, capped error reports (exit 1 on errors). Samples: sample/inventory.csv, sample/estate-issues.json. RVTools import now keeps `VM UUID` and the disk `Path`.
+
+- Readiness diff: `scout diff old.json new.json [--format text] [--fail-on regression,new-blocker,score-drop=N]` and `POST /api/v1/diff`.
+
+- Dashboard: estate findings, plan check (validator and what-if) and readiness diff sections in the embedded UI. No build step; all server data is escaped.
+
 ### Fixes
+- Inventory decode rejects trailing data after the JSON document and unsupported `schema` values.
+- `POST /api/v1/plan`, `/api/v1/analyze` and the new endpoints reject trailing data after the JSON document.
 - Workbook and findings CSV cells beginning with `=`, `+`, `-`, `@` are now neutralised (spreadsheet formula injection via VM names).
 
 ### Dependency and toolchain upgrades

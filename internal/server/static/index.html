@@ -27,6 +27,9 @@ SPDX-License-Identifier: LicenseRef-Zyvor-Production-2.0
         <a href="#inventory">Inventory</a>
         <a href="#dependencies">Dependencies</a>
         <a href="#waves">Waves</a>
+        <a href="#estate">Estate</a>
+        <a href="#plancheck">Plan check</a>
+        <a href="#diff">Diff</a>
       </nav>
       <a class="nav-action" href="/api/v1/report" target="_blank" rel="noopener">Open report</a>
     </div>
@@ -91,6 +94,52 @@ SPDX-License-Identifier: LicenseRef-Zyvor-Production-2.0
         <p>Connected, non-blocked workloads are grouped together. Blocked workloads stay out of the plan until their findings are remediated.</p>
       </div>
       <div id="waveGrid" class="wave-grid"></div>
+    </section>
+
+    <section class="section" id="estate">
+      <div class="section-head">
+        <div><div class="eyebrow">ESTATE FINDINGS</div><h2>Problems that only<br>exist between VMs.</h2></div>
+        <p>Duplicate MACs, UUIDs and names, disks on datastores or NICs on networks missing from the inventory, and shared-disk groups split across waves. Each also appears on the affected VMs.</p>
+      </div>
+      <div id="estateFindings" aria-live="polite"><div class="empty">Loading…</div></div>
+    </section>
+
+    <section class="section" id="plancheck">
+      <div class="section-head">
+        <div><div class="eyebrow">PLAN CHECK</div><h2>Edit the waves.<br>Scout checks them.</h2></div>
+        <p>Paste a <code>scout-plan/1</code> wave plan, or load the automatic one and change it. Scout reports dependency order, exclusive groups, concurrency, window overruns and shared disks, naming the VMs. Add moves to see what a change would fix or break.</p>
+      </div>
+      <div class="tool-card">
+        <label class="tool-label" for="planInput">Wave plan (JSON)</label>
+        <textarea id="planInput" class="tool-text" rows="12" spellcheck="false" placeholder='{"schema":"scout-plan/1","waves":[{"wave":1,"vms":["app-01"]}]}'></textarea>
+        <label class="tool-label" for="moveInput">What-if moves (optional, <code>vm=wave</code>, comma separated)</label>
+        <input id="moveInput" class="tool-input" type="text" autocomplete="off" placeholder="db-01=2, web-01=3">
+        <div class="tool-actions">
+          <button class="button secondary" id="planDraft" type="button">Load automatic plan</button>
+          <button class="button primary" id="planValidate" type="button">Validate</button>
+        </div>
+        <div id="planResult" class="tool-result" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section class="section" id="diff">
+      <div class="section-head">
+        <div><div class="eyebrow">READINESS DIFF</div><h2>What changed<br>since last time.</h2></div>
+        <p>Choose an older <code>scout assess</code> output or inventory file. It stays in this browser tab and is sent only to this Scout server, which compares it with the current assessment.</p>
+      </div>
+      <div class="tool-card">
+        <label class="tool-label" for="diffFile">Older assessment or inventory (.json)</label>
+        <input id="diffFile" class="tool-input" type="file" accept=".json,application/json">
+        <label class="tool-label" for="diffGate">Fail on</label>
+        <select id="diffGate" class="tool-input">
+          <option value="">Nothing (report only)</option>
+          <option value="regression">Any VM got worse</option>
+          <option value="new-blocker">A new blocker appeared</option>
+          <option value="regression,new-blocker">Regression or new blocker</option>
+        </select>
+        <div class="tool-actions"><button class="button primary" id="diffRun" type="button">Compare</button></div>
+        <div id="diffResult" class="tool-result" aria-live="polite"></div>
+      </div>
     </section>
 
     <section class="cta-section">

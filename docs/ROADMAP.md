@@ -10,6 +10,7 @@ This roadmap describes likely public work and is not a release commitment.
 - OpenStack connector
 - Hyper-V connector
 - OVF/OVA import adapters
+- Generic CSV and `scout-inventory/1` JSON import with validation (shipped; Live Optics and vCenter JSON remain unverified and unimplemented)
 
 ## Assessment
 
@@ -17,6 +18,7 @@ This roadmap describes likely public work and is not a release commitment.
 - Target profiles for KubeVirt, plain libvirt/KVM, and selected cloud targets
 - Guest driver readiness
 - Guest OS support, hardware version, CBT, independent disk and legacy NIC rules (shipped; see RESEARCH.md for what remains)
+- Estate-level (cross-VM) rules: duplicate MAC/UUID/name, missing datastore/network, shared-disk split (shipped)
 - Windows VirtIO readiness
 - Storage conversion estimates
 - Network policy translation findings
@@ -33,6 +35,7 @@ This roadmap describes likely public work and is not a release commitment.
 
 - Capacity-aware wave packing
 - Maintenance-window, concurrency and exclusive-group constraints with warm/cold downtime estimates (shipped, `scout plan`)
+- Validator and what-if for user-edited wave plans (shipped, `scout plan --validate`)
 - Affinity/anti-affinity preservation
 - Site/rack/failure-domain constraints
 - Estimated transfer time by datastore and link capacity
@@ -50,4 +53,5 @@ This roadmap describes likely public work and is not a release commitment.
 - Webhooks
 - OpenAPI specification
 - Export adapter for migration orchestrators such as Transiva
-- CI-friendly policy gate mode
+- CI-friendly policy gate mode (`scout diff --fail-on`, `scout plan --validate`; a rule-level policy file is not built)
+- Readiness diff between two assessments (shipped)
