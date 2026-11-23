@@ -24,6 +24,7 @@ import (
 	"github.com/zyvorai/scout/internal/inventory"
 	"github.com/zyvorai/scout/internal/model"
 	"github.com/zyvorai/scout/internal/plan"
+	"github.com/zyvorai/scout/internal/policy"
 	"github.com/zyvorai/scout/internal/report"
 	"github.com/zyvorai/scout/internal/server"
 )
@@ -46,6 +47,8 @@ func main() {
 		err = cmdDiff(os.Args[2:])
 	case "plan":
 		err = cmdPlan(os.Args[2:])
+	case "policy":
+		err = cmdPolicy(os.Args[2:])
 	case "assess":
 		err = cmdAssess(os.Args[2:])
 	case "report":
@@ -77,7 +80,9 @@ Usage:
   scout scan   --source vmware --url https://vcenter.example --user admin --out scout.json
   scout import --rvtools rvtools.xlsx --storage storage.json --dr dr.yaml --assumptions assumptions.json --out scout.json
   scout import --csv inventory.csv | --scout-json inventory.json [--validate] --out scout.json
-  scout assess --file scout.json [--format json|sarif|csv]
+  scout assess --file scout.json [--format json|sarif|csv] [--policy policy.json [--fail-on-expired]]
+  scout policy check policy.json        validate a scout-policy/1 file and list waivers that expire soon
+  scout policy rules                    list the rule ids a policy may name
   scout diff   old.json new.json [--format text] [--fail-on regression,new-blocker,score-drop=5]
   scout plan   --file scout.json [--link-mbps 1000 --max-concurrent 4 --window 240 --exclusive "db-1,db-2"]
   scout plan   --file scout.json --validate plan.json [--move vm=2] [--format text]   (--draft writes an editable plan)
@@ -88,7 +93,8 @@ Usage:
 Commands:
   scan     Discover or generate an inventory
   import   Read local RVTools, storage.json, and dr.yaml. Nothing is uploaded.
-  assess   Print readiness assessments as JSON, SARIF 2.1.0, or findings CSV
+  assess   Print readiness assessments as JSON, SARIF 2.1.0, or findings CSV; --policy applies waivers and overrides
+  policy   Validate a policy file (waivers need a reason and an expiry date) or list rule ids
   diff     Compare two assessments (or inventories): changed verdicts, rules that started or stopped firing, score deltas
   plan     Estimate downtime and maintenance windows per wave under constraints
   report   Write the HTML report, executive PDF, and CSV workbook
@@ -140,6 +146,8 @@ func cmdAssess(args []string) error {
 	fs := flag.NewFlagSet("assess", flag.ContinueOnError)
 	file := fs.String("file", "scout.json", "inventory JSON")
 	format := fs.String("format", "json", "output format: json, sarif, or csv")
+	policyFile := fs.String("policy", "", "scout-policy/1 file with waivers and rule overrides")
+	failExpired := fs.Bool("fail-on-expired", false, "with --policy: exit 1 when a waiver has expired or matched nothing")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
@@ -149,6 +157,21 @@ func cmdAssess(args []string) error {
 	}
 	a := engine.Evaluate(inv)
 	a, est := estate.Annotate(inv, a)
+	var polReport *policy.Report
+	if *policyFile != "" {
+		now := time.Now()
+		pol, err := policy.Load(*policyFile, now)
+		if err != nil {
+			return err
+		}
+		var rep policy.Report
+		a, rep = policy.Apply(a, pol, now)
+		polReport = &rep
+		fmt.Fprint(os.Stderr, policySummary(rep))
+		if *failExpired && (rep.Counts.ExpiredWaivers > 0 || rep.Counts.UnusedWaivers > 0) {
+			defer func() { os.Exit(1) }()
+		}
+	}
 	switch *format {
 	case "json":
 	case "sarif":
@@ -158,7 +181,65 @@ func cmdAssess(args []string) error {
 	default:
 		return fmt.Errorf("unknown --format %q (want json, sarif, or csv)", *format)
 	}
-	return writeJSON(os.Stdout, map[string]any{"summary": engine.Summary(inv, a), "assessments": a, "graph": graph.Build(inv, a), "estate": est, "estateFindings": engine.EstateFindings(a)})
+	out := map[string]any{"summary": engine.Summary(inv, a), "assessments": a, "graph": graph.Build(inv, a), "estate": est, "estateFindings": engine.EstateFindings(a)}
+	if polReport != nil {
+		out["policy"] = polReport
+	}
+	return writeJSON(os.Stdout, out)
+}
+
+// policySummary prints what a policy did to stderr, so a pipeline that reads
+// JSON from stdout still shows a human the waivers and overrides in effect.
+func policySummary(r policy.Report) string {
+	c := r.Counts
+	var b strings.Builder
+	fmt.Fprintf(&b, "policy: %d finding(s) waived (%d blocker), %d dropped by disabled rules, %d severity/penalty change(s) (%d blocker lowered)\n", c.FindingsWaived, c.BlockersWaived, c.FindingsDropped, c.FindingsChanged, c.BlockersLowered)
+	for _, e := range r.Expired {
+		fmt.Fprintf(&b, "policy: EXPIRED waiver %s on %q (%s): %d finding(s) are active again\n", e.Rule, e.VM, e.Expires, e.Matched)
+	}
+	for _, u := range r.Unused {
+		fmt.Fprintf(&b, "policy: waiver %s on %q matched no finding (stale or mistyped selector)\n", u.Rule, u.VM)
+	}
+	for _, e := range r.Expiring {
+		fmt.Fprintf(&b, "policy: waiver %s on %q expires in %d day(s) (%s)\n", e.Rule, e.VM, e.InDays, e.Expires)
+	}
+	return b.String()
+}
+
+func cmdPolicy(args []string) error {
+	if len(args) == 0 {
+		return fmt.Errorf("usage: scout policy check FILE | scout policy rules")
+	}
+	switch args[0] {
+	case "rules":
+		for _, id := range engine.KnownRuleIDs() {
+			fmt.Println(id)
+		}
+		return nil
+	case "check":
+		if len(args) != 2 {
+			return fmt.Errorf("usage: scout policy check FILE")
+		}
+		now := time.Now()
+		pol, err := policy.Load(args[1], now)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("ok: %s (%d rule override(s), %d waiver(s))\n", args[1], len(pol.Rules), len(pol.Waivers))
+		_, rep := policy.Apply(nil, pol, now)
+		for _, e := range rep.Expired {
+			fmt.Printf("expired: %s on %q (%s)\n", e.Rule, e.VM, e.Expires)
+		}
+		for _, e := range rep.Expiring {
+			fmt.Printf("expires in %d day(s): %s on %q (%s)\n", e.InDays, e.Rule, e.VM, e.Expires)
+		}
+		if len(rep.Expired) > 0 {
+			return fmt.Errorf("%d waiver(s) have expired", len(rep.Expired))
+		}
+		return nil
+	default:
+		return fmt.Errorf("unknown policy command %q (want check or rules)", args[0])
+	}
 }
 
 func cmdDiff(args []string) error {

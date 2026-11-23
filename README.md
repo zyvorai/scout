@@ -244,6 +244,7 @@ make test && make vet && make build
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Package boundaries |
 | [docs/API.md](docs/API.md) | HTTP API |
 | [docs/DEPLOY.md](docs/DEPLOY.md) | Container, remote, Helm |
+| [docs/POLICY.md](docs/POLICY.md) | Waivers with an expiry date and rule overrides (`--policy`) |
 | [docs/ROADMAP.md](docs/ROADMAP.md) | Next milestones |
 
 Social assets: [docs/social/](docs/social/).
