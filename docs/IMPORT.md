@@ -18,7 +18,7 @@ The inventory is written mode `0600`. Warnings for missing RVTools sheets go to 
 
 ## RVTools
 
-The workbook is `.xlsx`. Scout reads `vInfo`, `vDisk`, `vSnapshot`, `vHost`, `vDatastore`, `vPartition`, and `vNetwork`. A missing sheet is a warning, not a guessed value. VirtIO driver state is not in RVTools, so Windows guests are marked for GuestKit inspection instead of being scored as ready.
+The workbook is `.xlsx`. Scout reads `vInfo`, `vDisk`, `vSnapshot`, `vHost`, `vDatastore`, `vPartition`, and `vNetwork`. A missing sheet is a warning, not a guessed value. `vInfo` columns `HW version` and `CBT`, `vDisk` `Disk Mode`, and `vNetwork` `Adapter` feed the hardware-version, CBT, independent-disk and legacy-NIC rules; when a column is absent the rule stays silent. VirtIO driver state is not in RVTools, so Windows guests are marked for GuestKit inspection instead of being scored as ready.
 
 ## storage.json
 

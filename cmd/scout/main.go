@@ -21,6 +21,7 @@ import (
 	"github.com/zyvorai/scout/internal/intake"
 	"github.com/zyvorai/scout/internal/inventory"
 	"github.com/zyvorai/scout/internal/model"
+	"github.com/zyvorai/scout/internal/plan"
 	"github.com/zyvorai/scout/internal/report"
 	"github.com/zyvorai/scout/internal/server"
 )
@@ -39,6 +40,8 @@ func main() {
 		err = cmdScan(os.Args[2:])
 	case "import":
 		err = cmdImport(os.Args[2:])
+	case "plan":
+		err = cmdPlan(os.Args[2:])
 	case "assess":
 		err = cmdAssess(os.Args[2:])
 	case "report":
@@ -69,7 +72,8 @@ Usage:
   scout scan   --source demo --out scout.json
   scout scan   --source vmware --url https://vcenter.example --user admin --out scout.json
   scout import --rvtools rvtools.xlsx --storage storage.json --dr dr.yaml --assumptions assumptions.json --out scout.json
-  scout assess --file scout.json
+  scout assess --file scout.json [--format json|sarif|csv]
+  scout plan   --file scout.json [--link-mbps 1000 --max-concurrent 4 --window 240 --exclusive "db-1,db-2"]
   scout report --file scout.json --out report.html --executive executive.html --pdf executive.pdf --workbook workbook.zip
   scout serve  --file scout.json --addr 127.0.0.1:18447
   scout version
@@ -77,7 +81,8 @@ Usage:
 Commands:
   scan     Discover or generate an inventory
   import   Read local RVTools, storage.json, and dr.yaml. Nothing is uploaded.
-  assess   Print readiness assessments as JSON
+  assess   Print readiness assessments as JSON, SARIF 2.1.0, or findings CSV
+  plan     Estimate downtime and maintenance windows per wave under constraints
   report   Write the HTML report, executive PDF, and CSV workbook
   serve    Start the embedded dashboard and JSON API (loopback by default)
 
@@ -126,6 +131,7 @@ func cmdScan(args []string) error {
 func cmdAssess(args []string) error {
 	fs := flag.NewFlagSet("assess", flag.ContinueOnError)
 	file := fs.String("file", "scout.json", "inventory JSON")
+	format := fs.String("format", "json", "output format: json, sarif, or csv")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
@@ -135,7 +141,60 @@ func cmdAssess(args []string) error {
 	}
 	a := graph.AssignWaves(inv, engine.Assess(inv, nil))
 	a, est := estate.Annotate(inv, a)
+	switch *format {
+	case "json":
+	case "sarif":
+		return report.WriteSARIF(os.Stdout, version, a)
+	case "csv":
+		return report.WriteFindingsCSV(os.Stdout, a)
+	default:
+		return fmt.Errorf("unknown --format %q (want json, sarif, or csv)", *format)
+	}
 	return writeJSON(os.Stdout, map[string]any{"summary": engine.Summary(inv, a), "assessments": a, "graph": graph.Build(inv, a), "estate": est})
+}
+
+func cmdPlan(args []string) error {
+	fs := flag.NewFlagSet("plan", flag.ContinueOnError)
+	file := fs.String("file", "scout.json", "inventory JSON")
+	c := plan.Constraints{}
+	fs.IntVar(&c.MaxConcurrent, "max-concurrent", 0, "VMs cut over in parallel (default 4)")
+	fs.IntVar(&c.WindowMinutes, "window", 0, "maintenance window minutes (default 240)")
+	fs.Float64Var(&c.LinkMbps, "link-mbps", 0, "usable link Mbps (default from assumptions)")
+	fs.Float64Var(&c.Efficiency, "efficiency", 0, "achieved fraction of the link, 0-1 (default 0.7)")
+	fs.IntVar(&c.CutoverMinutes, "cutover-minutes", 0, "per-VM cutover overhead (default from assumptions, else 15)")
+	fs.Float64Var(&c.DeltaPercent, "delta-percent", 0, "final warm sync as percent of data (default 5)")
+	exclusive := fs.String("exclusive", "", "VM ids or names that must not cut over together, comma separated; repeat groups with ';'")
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+	inv, err := inventory.Load(*file)
+	if err != nil {
+		return err
+	}
+	base := plan.FromInventory(inv)
+	if c.LinkMbps == 0 {
+		c.LinkMbps = base.LinkMbps
+	}
+	if c.CutoverMinutes == 0 {
+		c.CutoverMinutes = base.CutoverMinutes
+	}
+	for _, g := range strings.Split(*exclusive, ";") {
+		var group []string
+		for _, ref := range strings.Split(g, ",") {
+			if ref = strings.TrimSpace(ref); ref != "" {
+				group = append(group, ref)
+			}
+		}
+		if len(group) > 1 {
+			c.ExclusiveGroups = append(c.ExclusiveGroups, group)
+		}
+	}
+	a := graph.AssignWaves(inv, engine.Assess(inv, nil))
+	p, err := plan.Build(inv, a, c)
+	if err != nil {
+		return err
+	}
+	return writeJSON(os.Stdout, p)
 }
 
 func cmdImport(args []string) error {
@@ -256,6 +315,7 @@ func cmdServe(args []string, logger *slog.Logger) error {
 	if err != nil {
 		return err
 	}
+	server.Version = version
 	return server.Listen(*addr, inv, logger)
 }
 

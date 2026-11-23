@@ -38,9 +38,12 @@
           "network": "prod-app",
           "ip": "10.40.1.21",
           "vlan": 401,
-          "sriov": false
+          "sriov": false,
+          "type": "vmxnet3"
         }
-      ]
+      ],
+      "hwVersion": 19,
+      "cbtEnabled": true
     },
     {
       "id": "vm-102",
@@ -85,9 +88,12 @@
           "network": "prod-db",
           "ip": "10.40.2.15",
           "vlan": 402,
-          "sriov": false
+          "sriov": false,
+          "type": "e1000e"
         }
-      ]
+      ],
+      "hwVersion": 13,
+      "cbtEnabled": true
     },
     {
       "id": "vm-103",
@@ -126,7 +132,9 @@
           "vlan": 403,
           "sriov": false
         }
-      ]
+      ],
+      "hwVersion": 19,
+      "cbtEnabled": false
     },
     {
       "id": "vm-104",
@@ -165,7 +173,9 @@
           "vlan": 410,
           "sriov": false
         }
-      ]
+      ],
+      "hwVersion": 13,
+      "cbtEnabled": true
     },
     {
       "id": "vm-105",
@@ -212,7 +222,9 @@
           "vlan": 402,
           "sriov": false
         }
-      ]
+      ],
+      "hwVersion": 19,
+      "cbtEnabled": true
     },
     {
       "id": "vm-106",
@@ -251,7 +263,9 @@
           "vlan": 501,
           "sriov": true
         }
-      ]
+      ],
+      "hwVersion": 13,
+      "cbtEnabled": false
     },
     {
       "id": "vm-107",
@@ -290,7 +304,9 @@
           "vlan": 601,
           "sriov": false
         }
-      ]
+      ],
+      "hwVersion": 19,
+      "cbtEnabled": true
     },
     {
       "id": "vm-108",
@@ -318,7 +334,8 @@
           "format": "vmdk",
           "shared": false,
           "rdm": false,
-          "datastore": "vsan-prod"
+          "datastore": "vsan-prod",
+          "mode": "independent_persistent"
         }
       ],
       "nics": [
@@ -329,7 +346,9 @@
           "vlan": 420,
           "sriov": false
         }
-      ]
+      ],
+      "hwVersion": 4,
+      "cbtEnabled": true
     }
   ],
   "connections": [

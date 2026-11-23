@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Features
+- Six new readiness rules (14 -> 20): `guest-os-support`, `hw-version`, `cbt-disabled`, `snapshot-cbt-limit`, `independent-disk`, `legacy-nic`. New optional inventory fields `hwVersion`, `cbtEnabled`, disk `mode`, NIC `type`, populated from RVTools.
+- Downtime and maintenance-window planner: `scout plan`, `GET/POST /api/v1/plan`.
+- SARIF 2.1.0 and findings CSV export: `scout assess --format sarif|csv`, `/api/v1/sarif`, `/api/v1/findings.csv`.
+- Research notes: docs/RESEARCH.md.
+
+### Fixes
+- Workbook and findings CSV cells beginning with `=`, `+`, `-`, `@` are now neutralised (spreadsheet formula injection via VM names).
+
 ### Dependency and toolchain upgrades
 - Go: `go.mod` directive 1.23 -> 1.26; CI now tests Go 1.26.x and 1.27.x; Dockerfile build image `golang:1.27.4-alpine`, runtime `distroless/static-debian13:nonroot`.
 - GitHub Actions: checkout v7, setup-go v7, setup-node v7, upload-pages-artifact v5, deploy-pages v5.

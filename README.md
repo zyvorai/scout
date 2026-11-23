@@ -18,7 +18,7 @@
 
 **Migration discovery and readiness before migration risk.** Zyvor Scout is a read-only assessment tool for teams planning migrations from virtualized estates to KVM/KubeVirt and other open platforms. It discovers or imports VM inventory, evaluates compatibility, explains blockers, maps dependencies, groups workloads into migration waves, and serves a polished local dashboard from one Go binary.
 
-**14 readiness rules** · **Ready · Review · Blocked** · **Migration waves** · **Read-only, files stay local** · **One Go binary, no third-party dependencies**
+**20 readiness rules** · **Ready · Review · Blocked** · **Migration waves** · **Read-only, files stay local** · **One Go binary, no third-party dependencies**
 
 📖 **[Read the full docs](https://zyvorai.github.io/scout/)** — quickstart, import formats, architecture, and API.
 
@@ -125,12 +125,14 @@ Visit `http://127.0.0.1:18447`.
 
 - Explainable compatibility rule engine
 - Ready / Review / Blocked classification
-- Rules for encryption, RDM, shared disks, vTPM, Secure Boot, snapshots, GPU/PCI/USB/SR-IOV passthrough, guest tools, firmware, legacy OS
+- Rules for encryption, RDM, shared disks, vTPM, Secure Boot, snapshots, GPU/PCI/USB/SR-IOV passthrough, guest tools, firmware, legacy OS, guest OS conversion support, hardware version, CBT/warm-migration limits, independent disks, legacy NICs
 
 ### Plan
 
 - Dependency graph of connected workloads
 - Migration waves that cut over together
+- Downtime and maintenance-window planner (`scout plan`): warm vs cold copy time, max concurrency, exclusive groups
+- SARIF 2.1.0 and spreadsheet-safe CSV findings export (`scout assess --format sarif|csv`)
 - Portable HTML assessment report, executive PDF, workbook export
 
 ### Operate
@@ -179,6 +181,10 @@ When `scout serve` is running:
 | GET | `/api/v1/assessments` | Per-VM readiness |
 | GET | `/api/v1/summary` | Aggregate readiness |
 | GET | `/api/v1/graph` | Dependency graph |
+| GET | `/api/v1/estate` | Capacity, DR, architecture, TCO |
+| GET/POST | `/api/v1/plan` | Downtime and maintenance-window plan under constraints |
+| GET | `/api/v1/sarif` | Findings as SARIF 2.1.0 |
+| GET | `/api/v1/findings.csv` | Findings as spreadsheet-safe CSV |
 | GET | `/api/v1/report` | Portable HTML report |
 | POST | `/api/v1/analyze` | Analyze supplied inventory without persisting it |
 

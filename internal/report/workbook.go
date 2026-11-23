@@ -32,7 +32,7 @@ func WriteWorkbook(w io.Writer, data Data) error {
 			return err
 		}
 		cw := csv.NewWriter(fw)
-		if err := cw.WriteAll(file.rows); err != nil {
+		if err := cw.WriteAll(SafeRows(file.rows)); err != nil {
 			return fmt.Errorf("%s: %w", file.name, err)
 		}
 	}

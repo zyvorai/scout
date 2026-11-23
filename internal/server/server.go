@@ -10,6 +10,7 @@ import (
 	"io/fs"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/zyvorai/scout/internal/engine"
@@ -17,11 +18,15 @@ import (
 	"github.com/zyvorai/scout/internal/graph"
 	"github.com/zyvorai/scout/internal/inventory"
 	"github.com/zyvorai/scout/internal/model"
+	"github.com/zyvorai/scout/internal/plan"
 	"github.com/zyvorai/scout/internal/report"
 )
 
 //go:embed static/*
 var staticFS embed.FS
+
+// Version is reported in SARIF output; the CLI sets it at start-up.
+var Version = "dev"
 
 type Server struct {
 	Inventory model.Inventory
@@ -50,6 +55,74 @@ func (s Server) Handler() http.Handler {
 			s.Logger.Error("report", "error", err)
 		}
 	})
+	mux.HandleFunc("GET /api/v1/findings.csv", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/csv; charset=utf-8")
+		w.Header().Set("Content-Disposition", `attachment; filename="scout-findings.csv"`)
+		_ = report.WriteFindingsCSV(w, assessments)
+	})
+	mux.HandleFunc("GET /api/v1/sarif", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/sarif+json")
+		w.Header().Set("Content-Disposition", `attachment; filename="scout.sarif"`)
+		_ = report.WriteSARIF(w, Version, assessments)
+	})
+	mux.HandleFunc("GET /api/v1/plan", func(w http.ResponseWriter, r *http.Request) {
+		c := plan.FromInventory(s.Inventory)
+		q := r.URL.Query()
+		for key, dst := range map[string]*float64{"linkMbps": &c.LinkMbps, "efficiency": &c.Efficiency, "deltaPercent": &c.DeltaPercent} {
+			if v := q.Get(key); v != "" {
+				f, err := strconv.ParseFloat(v, 64)
+				if err != nil {
+					writeJSON(w, http.StatusBadRequest, map[string]string{"error": key + " must be a number"})
+					return
+				}
+				*dst = f
+			}
+		}
+		for key, dst := range map[string]*int{"maxConcurrent": &c.MaxConcurrent, "windowMinutes": &c.WindowMinutes, "cutoverMinutes": &c.CutoverMinutes} {
+			if v := q.Get(key); v != "" {
+				n, err := strconv.Atoi(v)
+				if err != nil {
+					writeJSON(w, http.StatusBadRequest, map[string]string{"error": key + " must be an integer"})
+					return
+				}
+				*dst = n
+			}
+		}
+		writePlan(w, s.Inventory, assessments, c)
+	})
+	mux.HandleFunc("POST /api/v1/plan", func(w http.ResponseWriter, r *http.Request) {
+		r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+		defer r.Body.Close()
+		c := plan.FromInventory(s.Inventory)
+		dec := json.NewDecoder(r.Body)
+		dec.DisallowUnknownFields()
+		var in plan.Constraints
+		if err := dec.Decode(&in); err != nil {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+			return
+		}
+		// Request values override assumptions; zero values keep them.
+		if in.MaxConcurrent != 0 {
+			c.MaxConcurrent = in.MaxConcurrent
+		}
+		if in.WindowMinutes != 0 {
+			c.WindowMinutes = in.WindowMinutes
+		}
+		if in.LinkMbps != 0 {
+			c.LinkMbps = in.LinkMbps
+		}
+		if in.Efficiency != 0 {
+			c.Efficiency = in.Efficiency
+		}
+		if in.CutoverMinutes != 0 {
+			c.CutoverMinutes = in.CutoverMinutes
+		}
+		if in.DeltaPercent != 0 {
+			c.DeltaPercent = in.DeltaPercent
+		}
+		c.ExclusiveGroups = in.ExclusiveGroups
+		writePlan(w, s.Inventory, assessments, c)
+	})
 	mux.HandleFunc("POST /api/v1/analyze", func(w http.ResponseWriter, r *http.Request) {
 		r.Body = http.MaxBytesReader(w, r.Body, 8<<20)
 		defer r.Body.Close()
@@ -77,6 +150,15 @@ func (s Server) Handler() http.Handler {
 
 func (s Server) HTTP(addr string) *http.Server {
 	return &http.Server{Addr: addr, Handler: s.Handler(), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 15 * time.Second, WriteTimeout: 30 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 1 << 20}
+}
+
+func writePlan(w http.ResponseWriter, inv model.Inventory, a []model.Assessment, c plan.Constraints) {
+	p, err := plan.Build(inv, a, c)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return
+	}
+	writeJSON(w, http.StatusOK, p)
 }
 
 func writeJSON(w http.ResponseWriter, status int, v any) {

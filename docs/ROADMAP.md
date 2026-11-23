@@ -16,6 +16,7 @@ This roadmap describes likely public work and is not a release commitment.
 - Versioned rule packs
 - Target profiles for KubeVirt, plain libvirt/KVM, and selected cloud targets
 - Guest driver readiness
+- Guest OS support, hardware version, CBT, independent disk and legacy NIC rules (shipped; see RESEARCH.md for what remains)
 - Windows VirtIO readiness
 - Storage conversion estimates
 - Network policy translation findings
@@ -31,7 +32,7 @@ This roadmap describes likely public work and is not a release commitment.
 ## Planning
 
 - Capacity-aware wave packing
-- Maintenance-window constraints
+- Maintenance-window, concurrency and exclusive-group constraints with warm/cold downtime estimates (shipped, `scout plan`)
 - Affinity/anti-affinity preservation
 - Site/rack/failure-domain constraints
 - Estimated transfer time by datastore and link capacity
