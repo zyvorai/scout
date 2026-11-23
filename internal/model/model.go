@@ -6,6 +6,9 @@ package model
 import "time"
 
 type Inventory struct {
+	// Schema is "scout-inventory/1" for files written by the generic importers.
+	// Plain inventory files may leave it empty.
+	Schema          string            `json:"schema,omitempty"`
 	GeneratedAt     time.Time         `json:"generatedAt"`
 	Source          string            `json:"source"`
 	Environment     string            `json:"environment"`
@@ -17,11 +20,15 @@ type Inventory struct {
 	Assumptions     *Assumptions      `json:"assumptions,omitempty"`
 	ImportWarnings  []string          `json:"importWarnings,omitempty"`
 	OrphanSnapshots []Snapshot        `json:"orphanSnapshots,omitempty"`
+	// Networks is the optional list of network names present in the source
+	// environment. When it is empty, network references are not cross-checked.
+	Networks []string `json:"networks,omitempty"`
 }
 
 type VM struct {
 	ID              string            `json:"id"`
 	Name            string            `json:"name"`
+	UUID            string            `json:"uuid,omitempty"`
 	OS              string            `json:"os"`
 	CPUs            int               `json:"cpus"`
 	MemoryMiB       int64             `json:"memoryMiB"`
@@ -55,6 +62,10 @@ type Disk struct {
 	RDM       bool   `json:"rdm"`
 	Mode      string `json:"mode,omitempty"`
 	Datastore string `json:"datastore,omitempty"`
+	// Backing is the backing file path (for example "[ds1] vm/data.vmdk").
+	// Disks on one datastore with the same backing path on several VMs are one
+	// shared disk. It is optional; without it sharing groups cannot be derived.
+	Backing string `json:"backing,omitempty"`
 }
 
 type NIC struct {

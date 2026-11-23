@@ -8,7 +8,7 @@ Scout is deliberately a single-binary Go application with no JavaScript build ch
 - `internal/model` — stable inventory, finding, assessment, summary, and graph data structures.
 - `internal/discovery` — source adapters. The `Discoverer` interface returns the common inventory model.
 - `internal/inventory` — strict JSON decode, validation, and persistence.
-- `internal/engine` — explainable compatibility rules and readiness scoring. `engine.go` holds the core rules and `target_rules.go` the virt-v2v / Forklift-derived rules (20 in total).
+- `internal/engine` — explainable compatibility rules and readiness scoring. `engine.go` holds the core rules and `target_rules.go` the virt-v2v / Forklift-derived rules (20 in total). `estate_rules.go` holds the second, cross-VM rule interface (6 more rules).
 - `internal/plan` — downtime/maintenance-window planner: warm vs cold copy time, concurrency batches, exclusive groups.
 - `internal/graph` — dependency graph projection and migration-wave grouping.
 - `internal/report` — standalone, portable HTML report generation, workbook CSVs, SARIF 2.1.0 and findings CSV export (all CSV is formula-injection safe).
@@ -63,8 +63,19 @@ type Rule interface {
 
 A rule returns `nil` when it has nothing to report. Findings can be informational, warning, or blocker severity.
 
+Estate-level rules implement a second interface that sees the whole inventory and the assigned waves:
+
+```go
+type EstateRule interface {
+    ID() string
+    Evaluate(EstateContext) []VMFinding
+}
+```
+
+`engine.Evaluate(inv)` is the single pipeline every entry point uses: per-VM rules, wave assignment, estate rules, rescoring. Estate rules run after waves are assigned and cannot emit blockers.
+
 ## Wave algorithm
 
-v0.1.0 uses connected components in the dependency graph. Non-blocked workloads in one connected component receive the same wave. Blocked workloads receive wave `0` and are excluded until remediated.
+v0.1.0 uses connected components in the dependency graph. Non-blocked workloads in one connected component receive the same wave. VMs that share a backing disk file are linked like a dependency. Blocked workloads receive wave `0` and are excluded until remediated.
 
 This is intentionally deterministic. Future schedulers can add target-capacity limits, maintenance windows, application priorities, or topology constraints while preserving the underlying dependency groups.

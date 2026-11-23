@@ -8,6 +8,8 @@
 - SARIF 2.1.0 and findings CSV export: `scout assess --format sarif|csv`, `/api/v1/sarif`, `/api/v1/findings.csv`.
 - Research notes: docs/RESEARCH.md.
 
+- Estate-level rules: a second rule interface (`engine.EstateRule`) that sees the whole inventory and the assigned waves, with six rules (20 -> 26): `duplicate-mac`, `duplicate-uuid`, `duplicate-name`, `missing-datastore`, `missing-network`, `shared-disk-split`. `GET /api/v1/estate/findings`, `estateFindings` in `scout assess`/`analyze`. New optional inventory fields: VM `uuid`, disk `backing`, top-level `networks`. VMs sharing a backing disk are now assigned to the same wave. `engine.Evaluate` is the single assess pipeline.
+
 ### Fixes
 - Workbook and findings CSV cells beginning with `=`, `+`, `-`, `@` are now neutralised (spreadsheet formula injection via VM names).
 

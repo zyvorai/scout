@@ -21,6 +21,14 @@ func AssignWaves(inv model.Inventory, assessments []model.Assessment) []model.As
 		adj[e.From] = append(adj[e.From], e.To)
 		adj[e.To] = append(adj[e.To], e.From)
 	}
+	// VMs that share a backing disk file must move together, so they are
+	// linked like a dependency.
+	for _, g := range model.SharedDiskGroups(inv) {
+		for i := 1; i < len(g.VMs); i++ {
+			adj[g.VMs[0]] = append(adj[g.VMs[0]], g.VMs[i])
+			adj[g.VMs[i]] = append(adj[g.VMs[i]], g.VMs[0])
+		}
+	}
 	visited := map[string]bool{}
 	wave := 0
 	for _, vm := range inv.VMs {

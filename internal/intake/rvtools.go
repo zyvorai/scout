@@ -77,6 +77,7 @@ func FromRVTools(path string, now time.Time) (model.Inventory, error) {
 		vm := &model.VM{
 			ID:          id,
 			Name:        name,
+			UUID:        cell(row, "vm uuid", "uuid"),
 			OS:          osName,
 			CPUs:        atoi(cell(row, "cpus", "cpu", "# cpu")),
 			MemoryMiB:   mem,
@@ -120,6 +121,9 @@ func FromRVTools(path string, now time.Time) (model.Inventory, error) {
 				Format:    "vmdk",
 				Mode:      strings.ToLower(cell(row, "disk mode", "mode")),
 				Datastore: cell(row, "datastore", "datastore name"),
+				// RVTools names this column "Path" or "Disk Path"; when it is absent
+				// the disk simply has no backing and no sharing group is derived.
+				Backing: cell(row, "disk path", "path", "file name"),
 			}
 			mode := strings.ToLower(cell(row, "disk mode", "mode"))
 			raw := cell(row, "raw lun id", "raw lun", "raw")

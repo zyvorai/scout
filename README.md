@@ -18,7 +18,7 @@
 
 **Migration discovery and readiness before migration risk.** Zyvor Scout is a read-only assessment tool for teams planning migrations from virtualized estates to KVM/KubeVirt and other open platforms. It discovers or imports VM inventory, evaluates compatibility, explains blockers, maps dependencies, groups workloads into migration waves, and serves a polished local dashboard from one Go binary.
 
-**20 readiness rules** · **Ready · Review · Blocked** · **Migration waves** · **Read-only, files stay local** · **One Go binary, no third-party dependencies**
+**26 readiness rules** (20 per-VM + 6 estate-level) · **Ready · Review · Blocked** · **Migration waves** · **Read-only, files stay local** · **One Go binary, no third-party dependencies**
 
 📖 **[Read the full docs](https://zyvorai.github.io/scout/)** — quickstart, import formats, architecture, and API.
 
@@ -126,6 +126,7 @@ Visit `http://127.0.0.1:18447`.
 - Explainable compatibility rule engine
 - Ready / Review / Blocked classification
 - Rules for encryption, RDM, shared disks, vTPM, Secure Boot, snapshots, GPU/PCI/USB/SR-IOV passthrough, guest tools, firmware, legacy OS, guest OS conversion support, hardware version, CBT/warm-migration limits, independent disks, legacy NICs
+- Estate-level rules that see the whole inventory: duplicate MAC / UUID / name, VMs on datastores or networks missing from the inventory, shared-disk groups split across waves
 
 ### Plan
 
@@ -168,7 +169,7 @@ Every VM begins at 100. Rules emit one of three finding levels:
 - **warning** — needs review or remediation
 - **blocker** — excludes the workload from migration waves until resolved
 
-Rules live in `internal/engine/engine.go` and are intentionally simple to extend.
+Per-VM rules live in `internal/engine/engine.go` and `target_rules.go`; estate-level rules (which see every VM) live in `internal/engine/estate_rules.go`. Both are intentionally simple to extend.
 
 ## API
 
@@ -181,6 +182,7 @@ When `scout serve` is running:
 | GET | `/api/v1/assessments` | Per-VM readiness |
 | GET | `/api/v1/summary` | Aggregate readiness |
 | GET | `/api/v1/graph` | Dependency graph |
+| GET | `/api/v1/estate/findings` | Estate-level (cross-VM) findings grouped by rule |
 | GET | `/api/v1/estate` | Capacity, DR, architecture, TCO |
 | GET/POST | `/api/v1/plan` | Downtime and maintenance-window plan under constraints |
 | GET | `/api/v1/sarif` | Findings as SARIF 2.1.0 |

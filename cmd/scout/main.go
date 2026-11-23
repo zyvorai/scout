@@ -139,7 +139,7 @@ func cmdAssess(args []string) error {
 	if err != nil {
 		return err
 	}
-	a := graph.AssignWaves(inv, engine.Assess(inv, nil))
+	a := engine.Evaluate(inv)
 	a, est := estate.Annotate(inv, a)
 	switch *format {
 	case "json":
@@ -150,7 +150,7 @@ func cmdAssess(args []string) error {
 	default:
 		return fmt.Errorf("unknown --format %q (want json, sarif, or csv)", *format)
 	}
-	return writeJSON(os.Stdout, map[string]any{"summary": engine.Summary(inv, a), "assessments": a, "graph": graph.Build(inv, a), "estate": est})
+	return writeJSON(os.Stdout, map[string]any{"summary": engine.Summary(inv, a), "assessments": a, "graph": graph.Build(inv, a), "estate": est, "estateFindings": engine.EstateFindings(a)})
 }
 
 func cmdPlan(args []string) error {
@@ -189,7 +189,7 @@ func cmdPlan(args []string) error {
 			c.ExclusiveGroups = append(c.ExclusiveGroups, group)
 		}
 	}
-	a := graph.AssignWaves(inv, engine.Assess(inv, nil))
+	a := engine.Evaluate(inv)
 	p, err := plan.Build(inv, a, c)
 	if err != nil {
 		return err

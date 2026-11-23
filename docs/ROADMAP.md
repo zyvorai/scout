@@ -17,6 +17,7 @@ This roadmap describes likely public work and is not a release commitment.
 - Target profiles for KubeVirt, plain libvirt/KVM, and selected cloud targets
 - Guest driver readiness
 - Guest OS support, hardware version, CBT, independent disk and legacy NIC rules (shipped; see RESEARCH.md for what remains)
+- Estate-level (cross-VM) rules: duplicate MAC/UUID/name, missing datastore/network, shared-disk split (shipped)
 - Windows VirtIO readiness
 - Storage conversion estimates
 - Network policy translation findings
