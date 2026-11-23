@@ -5,7 +5,7 @@
 [![CI](https://github.com/zyvorai/scout/actions/workflows/ci.yml/badge.svg)](https://github.com/zyvorai/scout/actions/workflows/ci.yml)
 [![License: Zyvor Production](https://img.shields.io/badge/license-Zyvor%20Production%20Licence%20v2.0-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-0.1.0-informational)](cmd/scout/main.go)
-[![Go](https://img.shields.io/badge/Go-1.23+-00ADD8?logo=go&logoColor=white)](go.mod)
+[![Go](https://img.shields.io/badge/Go-1.26+-00ADD8?logo=go&logoColor=white)](go.mod)
 [![Docs](https://img.shields.io/badge/Docs-zyvorai.github.io%2Fscout-0071e3)](https://zyvorai.github.io/scout/)
 
 [![Book a demo](https://img.shields.io/badge/Book_a_demo-0071e3?style=for-the-badge)](https://zyvor.dev/schedule?utm_source=github&utm_medium=scout&utm_campaign=readme_hero)
@@ -18,7 +18,7 @@
 
 **Migration discovery and readiness before migration risk.** Zyvor Scout is a read-only assessment tool for teams planning migrations from virtualized estates to KVM/KubeVirt and other open platforms. It discovers or imports VM inventory, evaluates compatibility, explains blockers, maps dependencies, groups workloads into migration waves, and serves a polished local dashboard from one Go binary.
 
-**14 readiness rules** · **Ready · Review · Blocked** · **Migration waves** · **Read-only, files stay local** · **One Go binary, no third-party dependencies**
+**20 readiness rules** · **Ready · Review · Blocked** · **Migration waves** · **Read-only, files stay local** · **One Go binary, no third-party dependencies**
 
 📖 **[Read the full docs](https://zyvorai.github.io/scout/)** — quickstart, import formats, architecture, and API.
 
@@ -86,7 +86,7 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for package boundaries and exte
 
 ## Quickstart
 
-Requires Go 1.23+.
+Requires Go 1.26+.
 
 ```bash
 git clone https://github.com/zyvorai/scout.git
@@ -125,12 +125,14 @@ Visit `http://127.0.0.1:18447`.
 
 - Explainable compatibility rule engine
 - Ready / Review / Blocked classification
-- Rules for encryption, RDM, shared disks, vTPM, Secure Boot, snapshots, GPU/PCI/USB/SR-IOV passthrough, guest tools, firmware, legacy OS
+- Rules for encryption, RDM, shared disks, vTPM, Secure Boot, snapshots, GPU/PCI/USB/SR-IOV passthrough, guest tools, firmware, legacy OS, guest OS conversion support, hardware version, CBT/warm-migration limits, independent disks, legacy NICs
 
 ### Plan
 
 - Dependency graph of connected workloads
 - Migration waves that cut over together
+- Downtime and maintenance-window planner (`scout plan`): warm vs cold copy time, max concurrency, exclusive groups
+- SARIF 2.1.0 and spreadsheet-safe CSV findings export (`scout assess --format sarif|csv`)
 - Portable HTML assessment report, executive PDF, workbook export
 
 ### Operate
@@ -179,6 +181,10 @@ When `scout serve` is running:
 | GET | `/api/v1/assessments` | Per-VM readiness |
 | GET | `/api/v1/summary` | Aggregate readiness |
 | GET | `/api/v1/graph` | Dependency graph |
+| GET | `/api/v1/estate` | Capacity, DR, architecture, TCO |
+| GET/POST | `/api/v1/plan` | Downtime and maintenance-window plan under constraints |
+| GET | `/api/v1/sarif` | Findings as SARIF 2.1.0 |
+| GET | `/api/v1/findings.csv` | Findings as spreadsheet-safe CSV |
 | GET | `/api/v1/report` | Portable HTML report |
 | POST | `/api/v1/analyze` | Analyze supplied inventory without persisting it |
 

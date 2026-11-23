@@ -32,6 +32,8 @@ type VM struct {
 	Encrypted       bool              `json:"encrypted"`
 	Snapshots       int               `json:"snapshots"`
 	ToolsStatus     string            `json:"toolsStatus"`
+	HWVersion       int               `json:"hwVersion,omitempty"`
+	CBTEnabled      *bool             `json:"cbtEnabled,omitempty"`
 	GPU             bool              `json:"gpu"`
 	SRIOV           bool              `json:"sriov"`
 	USBPassthrough  bool              `json:"usbPassthrough"`
@@ -51,6 +53,7 @@ type Disk struct {
 	Format    string `json:"format"`
 	Shared    bool   `json:"shared"`
 	RDM       bool   `json:"rdm"`
+	Mode      string `json:"mode,omitempty"`
 	Datastore string `json:"datastore,omitempty"`
 }
 
@@ -61,6 +64,7 @@ type NIC struct {
 	IP      string `json:"ip,omitempty"`
 	VLAN    int    `json:"vlan,omitempty"`
 	SRIOV   bool   `json:"sriov"`
+	Type    string `json:"type,omitempty"`
 }
 
 type Snapshot struct {

@@ -24,7 +24,12 @@ type ruleFunc struct {
 func (r ruleFunc) ID() string                          { return r.id }
 func (r ruleFunc) Evaluate(vm model.VM) *model.Finding { return r.fn(vm) }
 
+// DefaultRules returns the core rules followed by the migration-target rules.
 func DefaultRules() []Rule {
+	return append(coreRules(), targetRules()...)
+}
+
+func coreRules() []Rule {
 	return []Rule{
 		ruleFunc{"encrypted-vm", func(vm model.VM) *model.Finding {
 			if !vm.Encrypted {

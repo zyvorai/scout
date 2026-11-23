@@ -84,6 +84,11 @@ func FromRVTools(path string, now time.Time) (model.Inventory, error) {
 			Firmware:    strings.ToLower(cell(row, "firmware")),
 			ToolsStatus: cell(row, "tools status", "vmware tools", "guest tools status"),
 		}
+		vm.HWVersion = hwVersion(cell(row, "hw version", "hardware version", "vm version"))
+		if c := strings.ToLower(cell(row, "cbt", "changed block tracking")); c != "" {
+			on := truthy(c)
+			vm.CBTEnabled = &on
+		}
 		if env == "" {
 			env = cell(row, "datacenter", "datacenter name")
 		}
@@ -113,6 +118,7 @@ func FromRVTools(path string, now time.Time) (model.Inventory, error) {
 				ID:        firstNonEmpty(cell(row, "disk key", "disk", "controller", "path"), fmt.Sprintf("disk-%d", i+1)),
 				SizeGiB:   int64(math.Round(sizeMB / 1024)),
 				Format:    "vmdk",
+				Mode:      strings.ToLower(cell(row, "disk mode", "mode")),
 				Datastore: cell(row, "datastore", "datastore name"),
 			}
 			mode := strings.ToLower(cell(row, "disk mode", "mode"))
@@ -158,6 +164,7 @@ func FromRVTools(path string, now time.Time) (model.Inventory, error) {
 				MAC:     cell(row, "mac address", "mac"),
 				IP:      cell(row, "ip address", "ip", "ipv4 address"),
 				VLAN:    atoi(cell(row, "vlan", "vlan id")),
+				Type:    adapter,
 			}
 			if strings.Contains(adapter, "sriov") || strings.Contains(strings.ToLower(nic.Network), "sriov") {
 				nic.SRIOV = true
@@ -367,4 +374,16 @@ func parseTime(s string) time.Time {
 		return base.Add(time.Duration(n * float64(24*time.Hour))).UTC()
 	}
 	return time.Time{}
+}
+
+// hwVersion parses "vmx-19", "19" or "v19" into 19; 0 means unknown.
+func hwVersion(s string) int {
+	s = strings.ToLower(strings.TrimSpace(s))
+	s = strings.TrimPrefix(s, "vmx-")
+	s = strings.TrimPrefix(s, "v")
+	n, err := strconv.Atoi(s)
+	if err != nil || n < 0 {
+		return 0
+	}
+	return n
 }
