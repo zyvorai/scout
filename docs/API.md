@@ -96,6 +96,20 @@ VMs are referenced by id or name (names are case-insensitive; a name shared by s
 
 CLI: `scout plan --file scout.json --draft > plan.json`, then `scout plan --file scout.json --validate plan.json [--format text]` (exit status 1 when there are errors, so it works in CI), and `--move db-1=2` (repeatable) for a what-if.
 
+## `POST /api/v1/diff`
+
+Read-only readiness diff. The body is an older assessment (the JSON printed by `scout assess`) or an older inventory file (assessed with the current rules, so a rule change between runs shows up as a change). It is compared with what this server is currently serving. Capped at 8 MiB.
+
+The response is `{"result": ..., "gate": ...}`:
+
+- `old`, `new`: totals (`vms`, `ready`, `review`, `blocked`, `averageScore`) and `averageScoreDelta`.
+- `changed`: VMs whose status, score or fired rules differ, with `verdict` (`improved`, `regressed`, `unchanged` for a score-only change), `scoreDelta`, `rulesStarted`, `rulesStopped`. Regressions come first. `matchedBy: "name"` marks VMs whose ids differ between exports and were matched by a name that is unique on both sides.
+- `added`, `removed` (VM names; counts in `addedCount`, `removedCount`).
+- `rules`: per rule, `oldCount`, `newCount` and the VMs where it `started` or `stopped` firing. Rules with no change are omitted. Lists are capped at 200 names (`startedNotListed`, `stoppedNotListed` give the remainder); counts are exact.
+- `gate`: `?failOn=` takes a comma-separated list of `regression` (any VM got worse, ready < review < blocked), `new-blocker` (a blocker rule started firing, or a new VM is blocked) and `score-drop=N` (average score fell by more than N). `gate.failed` is true when any condition holds. Unknown tokens are 400.
+
+CLI: `scout diff old.json new.json [--format text] [--fail-on regression,new-blocker,score-drop=5]`. It exits 1 when the gate fails, so it can gate CI. Either file may be assess output or an inventory.
+
 ## `GET /api/v1/sarif`
 
 Findings as SARIF 2.1.0 (`application/sarif+json`) for CI and code-scanning tools. blocker maps to `error`, warning to `warning`, info to `note`. Each VM is a logical location. CLI: `scout assess --format sarif`.

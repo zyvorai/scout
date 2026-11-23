@@ -14,6 +14,8 @@
 
 - Import hardening and two documented generic formats: `scout import --csv` (header contract) and `--scout-json` (`scout-inventory/1`, schema in docs/scout-inventory-1.schema.json), with `--validate` for line-numbered, capped error reports (exit 1 on errors). Samples: sample/inventory.csv, sample/estate-issues.json. RVTools import now keeps `VM UUID` and the disk `Path`.
 
+- Readiness diff: `scout diff old.json new.json [--format text] [--fail-on regression,new-blocker,score-drop=N]` and `POST /api/v1/diff`.
+
 ### Fixes
 - Inventory decode rejects trailing data after the JSON document and unsupported `schema` values.
 - `POST /api/v1/plan`, `/api/v1/analyze` and the new endpoints reject trailing data after the JSON document.

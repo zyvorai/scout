@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/zyvorai/scout/internal/diff"
 	"github.com/zyvorai/scout/internal/engine"
 	"github.com/zyvorai/scout/internal/estate"
 	"github.com/zyvorai/scout/internal/graph"
@@ -152,6 +153,24 @@ func (s Server) Handler() http.Handler {
 			return
 		}
 		writeJSON(w, http.StatusOK, map[string]any{"validation": plan.Validate(s.Inventory, assessments, in.Plan)})
+	})
+	mux.HandleFunc("POST /api/v1/diff", func(w http.ResponseWriter, r *http.Request) {
+		// The body is the OLD assessment (scout assess output) or inventory; it
+		// is compared with what this server is currently serving.
+		r.Body = http.MaxBytesReader(w, r.Body, 8<<20)
+		defer r.Body.Close()
+		oldA, err := diff.Load(r.Body)
+		if err != nil {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+			return
+		}
+		res := diff.Compare(oldA, assessments)
+		gate, err := diff.Evaluate(res, r.URL.Query().Get("failOn"), assessments)
+		if err != nil {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"result": res, "gate": gate})
 	})
 	mux.HandleFunc("POST /api/v1/analyze", func(w http.ResponseWriter, r *http.Request) {
 		r.Body = http.MaxBytesReader(w, r.Body, 8<<20)

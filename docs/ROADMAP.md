@@ -53,4 +53,5 @@ This roadmap describes likely public work and is not a release commitment.
 - Webhooks
 - OpenAPI specification
 - Export adapter for migration orchestrators such as Transiva
-- CI-friendly policy gate mode
+- CI-friendly policy gate mode (`scout diff --fail-on`, `scout plan --validate`; a rule-level policy file is not built)
+- Readiness diff between two assessments (shipped)

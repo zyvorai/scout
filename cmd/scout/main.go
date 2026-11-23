@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/zyvorai/scout/internal/diff"
 	"github.com/zyvorai/scout/internal/discovery"
 	"github.com/zyvorai/scout/internal/engine"
 	"github.com/zyvorai/scout/internal/estate"
@@ -41,6 +42,8 @@ func main() {
 		err = cmdScan(os.Args[2:])
 	case "import":
 		err = cmdImport(os.Args[2:])
+	case "diff":
+		err = cmdDiff(os.Args[2:])
 	case "plan":
 		err = cmdPlan(os.Args[2:])
 	case "assess":
@@ -75,6 +78,7 @@ Usage:
   scout import --rvtools rvtools.xlsx --storage storage.json --dr dr.yaml --assumptions assumptions.json --out scout.json
   scout import --csv inventory.csv | --scout-json inventory.json [--validate] --out scout.json
   scout assess --file scout.json [--format json|sarif|csv]
+  scout diff   old.json new.json [--format text] [--fail-on regression,new-blocker,score-drop=5]
   scout plan   --file scout.json [--link-mbps 1000 --max-concurrent 4 --window 240 --exclusive "db-1,db-2"]
   scout plan   --file scout.json --validate plan.json [--move vm=2] [--format text]   (--draft writes an editable plan)
   scout report --file scout.json --out report.html --executive executive.html --pdf executive.pdf --workbook workbook.zip
@@ -85,6 +89,7 @@ Commands:
   scan     Discover or generate an inventory
   import   Read local RVTools, storage.json, and dr.yaml. Nothing is uploaded.
   assess   Print readiness assessments as JSON, SARIF 2.1.0, or findings CSV
+  diff     Compare two assessments (or inventories): changed verdicts, rules that started or stopped firing, score deltas
   plan     Estimate downtime and maintenance windows per wave under constraints
   report   Write the HTML report, executive PDF, and CSV workbook
   serve    Start the embedded dashboard and JSON API (loopback by default)
@@ -154,6 +159,68 @@ func cmdAssess(args []string) error {
 		return fmt.Errorf("unknown --format %q (want json, sarif, or csv)", *format)
 	}
 	return writeJSON(os.Stdout, map[string]any{"summary": engine.Summary(inv, a), "assessments": a, "graph": graph.Build(inv, a), "estate": est, "estateFindings": engine.EstateFindings(a)})
+}
+
+func cmdDiff(args []string) error {
+	fs := flag.NewFlagSet("diff", flag.ContinueOnError)
+	format := fs.String("format", "json", "output format: json or text")
+	failOn := fs.String("fail-on", "", "exit 1 when: regression, new-blocker, score-drop=N (comma separated)")
+	// Accept the two files before or after the flags.
+	var files []string
+	rest := args
+	for {
+		if err := fs.Parse(rest); err != nil {
+			return err
+		}
+		if fs.NArg() == 0 {
+			break
+		}
+		files = append(files, fs.Arg(0))
+		rest = fs.Args()[1:]
+	}
+	if len(files) != 2 {
+		return fmt.Errorf("diff needs exactly two files: scout diff old.json new.json")
+	}
+	if *format != "json" && *format != "text" {
+		return fmt.Errorf("unknown --format %q (want json or text)", *format)
+	}
+	load := func(path string) ([]model.Assessment, error) {
+		f, err := os.Open(path)
+		if err != nil {
+			return nil, err
+		}
+		defer f.Close()
+		a, err := diff.Load(f)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", path, err)
+		}
+		return a, nil
+	}
+	oldA, err := load(files[0])
+	if err != nil {
+		return err
+	}
+	newA, err := load(files[1])
+	if err != nil {
+		return err
+	}
+	res := diff.Compare(oldA, newA)
+	gate, err := diff.Evaluate(res, *failOn, newA)
+	if err != nil {
+		return err
+	}
+	if *format == "text" {
+		fmt.Print(res.Text())
+		for _, r := range gate.Reasons {
+			fmt.Println("GATE FAILED: " + r)
+		}
+	} else if err := writeJSON(os.Stdout, map[string]any{"result": res, "gate": gate}); err != nil {
+		return err
+	}
+	if gate.Failed {
+		return fmt.Errorf("gate failed: %s", strings.Join(gate.Reasons, "; "))
+	}
+	return nil
 }
 
 func cmdPlan(args []string) error {
