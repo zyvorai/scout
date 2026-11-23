@@ -8,3 +8,6 @@ scout.json
 *.pem
 *.key
 .DS_Store
+
+# macOS resource forks
+._*
