@@ -5,7 +5,7 @@
 [![CI](https://github.com/zyvorai/scout/actions/workflows/ci.yml/badge.svg)](https://github.com/zyvorai/scout/actions/workflows/ci.yml)
 [![License: Zyvor Production](https://img.shields.io/badge/license-Zyvor%20Production%20Licence%20v2.0-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-0.1.0-informational)](cmd/scout/main.go)
-[![Go](https://img.shields.io/badge/Go-1.23+-00ADD8?logo=go&logoColor=white)](go.mod)
+[![Go](https://img.shields.io/badge/Go-1.26+-00ADD8?logo=go&logoColor=white)](go.mod)
 [![Docs](https://img.shields.io/badge/Docs-zyvorai.github.io%2Fscout-0071e3)](https://zyvorai.github.io/scout/)
 
 [![Book a demo](https://img.shields.io/badge/Book_a_demo-0071e3?style=for-the-badge)](https://zyvor.dev/schedule?utm_source=github&utm_medium=scout&utm_campaign=readme_hero)
@@ -86,7 +86,7 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for package boundaries and exte
 
 ## Quickstart
 
-Requires Go 1.23+.
+Requires Go 1.26+.
 
 ```bash
 git clone https://github.com/zyvorai/scout.git
