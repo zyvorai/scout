@@ -22,7 +22,7 @@ This roadmap describes likely public work and is not a release commitment.
 - Windows VirtIO readiness
 - Storage conversion estimates
 - Network policy translation findings
-- Custom organization rules
+- Custom organization rules (severity/penalty overrides, disabled rules and waivers shipped; user-written rules still not built)
 
 ## Dependency intelligence
 
@@ -53,5 +53,6 @@ This roadmap describes likely public work and is not a release commitment.
 - Webhooks
 - OpenAPI specification
 - Export adapter for migration orchestrators such as Transiva
-- CI-friendly policy gate mode (`scout diff --fail-on`, `scout plan --validate`; a rule-level policy file is not built)
+- CI-friendly policy gate mode (`scout diff --fail-on`, `scout plan --validate`)
+- Rule-level policy file with expiring waivers and severity overrides (shipped, `scout assess --policy`; see [POLICY.md](POLICY.md); the dashboard and report do not apply it yet)
 - Readiness diff between two assessments (shipped)

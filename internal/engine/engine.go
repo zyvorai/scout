@@ -193,6 +193,23 @@ func Assess(inv model.Inventory, rules []Rule) []model.Assessment {
 	return out
 }
 
+// Rescore recomputes score and status from a.Findings. The policy layer calls
+// it after it changes or removes findings.
+func Rescore(a *model.Assessment) { rescore(a) }
+
+// KnownRuleIDs returns every built-in per-VM and estate rule id, sorted.
+func KnownRuleIDs() []string {
+	var ids []string
+	for _, r := range DefaultRules() {
+		ids = append(ids, r.ID())
+	}
+	for _, r := range DefaultEstateRules() {
+		ids = append(ids, r.ID())
+	}
+	sort.Strings(ids)
+	return ids
+}
+
 // rescore sorts the findings and recomputes score and status from them. It is
 // shared by the per-VM pass and the estate pass so both apply one scoring rule.
 func rescore(a *model.Assessment) {

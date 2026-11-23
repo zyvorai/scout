@@ -196,15 +196,26 @@ type Finding struct {
 	Basis string `json:"basis,omitempty"`
 }
 
+// WaivedFinding is a finding that a policy waiver excluded from scoring.
+type WaivedFinding struct {
+	Finding
+	WaivedBy string `json:"waivedBy"`
+	Reason   string `json:"reason"`
+	Expires  string `json:"expires"`
+}
+
 type Assessment struct {
-	VMID                    string    `json:"vmId"`
-	VMName                  string    `json:"vmName"`
-	Score                   int       `json:"score"`
-	Status                  string    `json:"status"`
-	Findings                []Finding `json:"findings"`
-	Wave                    int       `json:"wave"`
-	EstimatedCutoverMinutes int       `json:"estimatedCutoverMinutes,omitempty"`
-	CutoverBasis            string    `json:"cutoverBasis,omitempty"`
+	VMID     string    `json:"vmId"`
+	VMName   string    `json:"vmName"`
+	Score    int       `json:"score"`
+	Status   string    `json:"status"`
+	Findings []Finding `json:"findings"`
+	// Waived holds findings a policy waiver set aside. They do not count toward
+	// Score or Status but stay in the output so a reviewer can see them.
+	Waived                  []WaivedFinding `json:"waived,omitempty"`
+	Wave                    int             `json:"wave"`
+	EstimatedCutoverMinutes int             `json:"estimatedCutoverMinutes,omitempty"`
+	CutoverBasis            string          `json:"cutoverBasis,omitempty"`
 }
 
 const (
