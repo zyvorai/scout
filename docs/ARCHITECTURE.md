@@ -13,7 +13,7 @@ Scout is deliberately a single-binary Go application with no JavaScript build ch
 - `internal/diff` — read-only comparison of two assessments (or inventories) with a CI gate.
 - `internal/graph` — dependency graph projection and migration-wave grouping.
 - `internal/report` — standalone, portable HTML report generation, workbook CSVs, SARIF 2.1.0 and findings CSV export (all CSV is formula-injection safe).
-- `internal/server` — JSON API, embedded dashboard, HTTP hardening.
+- `internal/server` — JSON API, embedded dashboard (overview, inventory, dependencies, waves, estate findings, plan check, diff), HTTP hardening. The page loads `app.js` only (CSP `script-src 'self'`); every server-supplied string goes through `esc()`.
 
 ## Design principles
 

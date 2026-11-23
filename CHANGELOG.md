@@ -16,6 +16,8 @@
 
 - Readiness diff: `scout diff old.json new.json [--format text] [--fail-on regression,new-blocker,score-drop=N]` and `POST /api/v1/diff`.
 
+- Dashboard: estate findings, plan check (validator and what-if) and readiness diff sections in the embedded UI. No build step; all server data is escaped.
+
 ### Fixes
 - Inventory decode rejects trailing data after the JSON document and unsupported `schema` values.
 - `POST /api/v1/plan`, `/api/v1/analyze` and the new endpoints reject trailing data after the JSON document.

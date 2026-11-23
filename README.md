@@ -130,6 +130,7 @@ Visit `http://127.0.0.1:18447`.
 
 ### Plan
 
+- Dashboard sections for estate-level findings, the wave-plan validator with what-if, and the readiness diff (all escaped, no build step)
 - Dependency graph of connected workloads
 - Migration waves that cut over together
 - Downtime and maintenance-window planner (`scout plan`): warm vs cold copy time, max concurrency, exclusive groups

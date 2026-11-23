@@ -17,7 +17,7 @@
       [state.inventory, state.assessments, state.graph, state.summary] = await Promise.all([
         get('/api/v1/inventory'), get('/api/v1/assessments'), get('/api/v1/graph'), get('/api/v1/summary')
       ]);
-      renderSummary(); renderInventory(); renderGraph(); renderWaves(); bind();
+      renderSummary(); renderInventory(); renderGraph(); renderWaves(); bind(); extras();
     } catch (e) {
       $('inventoryRows').innerHTML = `<div class="empty">Could not load assessment: ${esc(e.message)}</div>`;
     }
@@ -90,6 +90,112 @@
     $('searchInput').addEventListener('input', e => { state.query=e.target.value.trim(); renderInventory(); });
     document.querySelectorAll('.segment').forEach(b=>b.addEventListener('click',()=>{ document.querySelectorAll('.segment').forEach(x=>x.classList.remove('active')); b.classList.add('active'); state.filter=b.dataset.filter; renderInventory(); }));
     $('drawerClose').addEventListener('click',closeDrawer); $('scrim').addEventListener('click',closeDrawer); document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer();});
+  }
+
+  // ---- estate findings, plan check, readiness diff -----------------------
+  async function post(path, body) {
+    const r = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || `${path}: ${r.status}`);
+    return j;
+  }
+  const sevClass = (s) => (s === 'error' || s === 'blocker') ? 'blocker' : (s === 'warning' ? 'warning' : '');
+  const chips = (names) => `<div class="chip-row">${(names || []).map(n => `<span class="wave-chip">${esc(n)}</span>`).join('')}</div>`;
+
+  async function renderEstate() {
+    const box = $('estateFindings');
+    try {
+      const groups = await get('/api/v1/estate/findings');
+      box.innerHTML = groups.length ? groups.map(g => `<article class="estate-group">
+        <h3>${esc(g.title)} <span class="pill ${g.severity === 'blocker' ? 'blocked' : 'review'}">${esc(g.severity)}</span></h3>
+        <div class="finding-detail">${esc(g.ruleId)} · ${g.count} VM${g.count === 1 ? '' : 's'}</div>
+        ${g.vms.slice(0, 50).map(v => `<div class="finding-card ${sevClass(g.severity)}"><div class="finding-title">${esc(v.vmName)}</div><div class="finding-detail">${esc(v.detail)}</div></div>`).join('')}
+        ${g.vms.length > 50 ? `<div class="finding-detail">and ${g.vms.length - 50} more</div>` : ''}
+        <div class="finding-fix"><strong>Recommendation:</strong> ${esc(g.recommendation)}</div></article>`).join('')
+        : '<div class="empty">No estate-level findings: no duplicate identities, missing datastores or networks, or split shared-disk groups.</div>';
+    } catch (e) {
+      box.innerHTML = `<div class="empty">Could not load estate findings: ${esc(e.message)}</div>`;
+    }
+  }
+
+  function renderViolations(v) {
+    const head = `<div class="tool-summary ${v.ok ? 'ok' : 'bad'}">${v.ok ? 'No errors' : `${v.errors} error${v.errors === 1 ? '' : 's'}`}, ${v.warnings} warning${v.warnings === 1 ? '' : 's'} · ${v.plan.totals.vms} VMs in ${v.plan.waves.length} waves · ${v.plan.totals.downtimeMinutes} min downtime · ${v.plan.totals.windows} window${v.plan.totals.windows === 1 ? '' : 's'}</div>`;
+    return head + v.violations.map(x => `<div class="finding-card ${sevClass(x.severity)}"><div class="finding-title">${esc(x.code)}${x.wave ? ` · wave ${esc(x.wave)}` : ''}</div><div class="finding-detail">${esc(x.message)}</div>${chips(x.vms)}</div>`).join('');
+  }
+
+  function parseMoves(text) {
+    const moves = [];
+    for (const part of text.split(',').map(s => s.trim()).filter(Boolean)) {
+      const i = part.lastIndexOf('=');
+      const wave = Number(part.slice(i + 1));
+      if (i <= 0 || !Number.isInteger(wave) || wave <= 0) throw new Error(`move "${part}" must look like vm=wave with a positive wave`);
+      moves.push({ vm: part.slice(0, i).trim(), toWave: wave });
+    }
+    return moves;
+  }
+
+  async function runPlanCheck() {
+    const out = $('planResult');
+    out.innerHTML = '<div class="finding-detail">Checking…</div>';
+    try {
+      const plan = JSON.parse($('planInput').value);
+      const moves = parseMoves($('moveInput').value);
+      const res = await post('/api/v1/plan/validate', JSON.stringify({ plan, moves }));
+      let html = '';
+      if (res.whatIf) {
+        const w = res.whatIf;
+        html += `<div class="tool-summary">What-if: ${w.moves.length} move${w.moves.length === 1 ? '' : 's'} · downtime <span class="${w.downtimeMinutesDelta > 0 ? 'delta-down' : 'delta-up'}">${w.downtimeMinutesDelta > 0 ? '+' : ''}${esc(w.downtimeMinutesDelta)} min</span> · windows ${w.windowsDelta > 0 ? '+' : ''}${esc(w.windowsDelta)}</div>`;
+        html += `<div class="finding-detail">Resolved: ${w.resolved.length} · Introduced: ${w.introduced.length}</div>`;
+        html += w.resolved.map(x => `<div class="finding-card"><div class="finding-title">Resolved: ${esc(x.code)}</div><div class="finding-detail">${esc(x.message)}</div></div>`).join('');
+        html += w.introduced.map(x => `<div class="finding-card ${sevClass(x.severity)}"><div class="finding-title">Introduced: ${esc(x.code)}</div><div class="finding-detail">${esc(x.message)}</div></div>`).join('');
+        html += (w.notes || []).map(n => `<div class="finding-detail">Note: ${esc(n)}</div>`).join('');
+        html += '<h4 style="margin-top:18px">Plan after the moves</h4>';
+      }
+      out.innerHTML = html + renderViolations(res.validation);
+    } catch (e) {
+      out.innerHTML = `<div class="finding-card blocker"><div class="finding-title">Could not check the plan</div><div class="finding-detail">${esc(e.message)}</div></div>`;
+    }
+  }
+
+  function renderDiff(res) {
+    const r = res.result, g = res.gate;
+    const d = r.averageScoreDelta;
+    let html = `<div class="tool-summary ${g.failed ? 'bad' : 'ok'}">${g.failed ? 'Gate failed: ' + esc(g.reasons.join('; ')) : 'Gate passed'}</div>
+      <div class="finding-detail">VMs ${esc(r.old.vms)} → ${esc(r.new.vms)} · ready ${esc(r.old.ready)} → ${esc(r.new.ready)} · review ${esc(r.old.review)} → ${esc(r.new.review)} · blocked ${esc(r.old.blocked)} → ${esc(r.new.blocked)} · average score ${esc(r.old.averageScore)}% → ${esc(r.new.averageScore)}% (<span class="${d < 0 ? 'delta-down' : 'delta-up'}">${d > 0 ? '+' : ''}${esc(d)}</span>)</div>
+      <div class="finding-detail">${esc(r.improved)} improved · ${esc(r.regressed)} regressed · ${esc(r.addedCount)} added · ${esc(r.removedCount)} removed</div>`;
+    html += r.changed.map(c => `<div class="finding-card ${c.verdict === 'regressed' ? 'blocker' : ''}"><div class="finding-title">${esc(c.vmName)} <span class="pill ${esc(c.newStatus)}">${esc(c.newStatus)}</span> <span style="float:right">${esc(c.oldScore)}% → ${esc(c.newScore)}% (${c.scoreDelta > 0 ? '+' : ''}${esc(c.scoreDelta)})</span></div>
+      <div class="finding-detail">${esc(c.verdict)}: ${esc(c.oldStatus)} → ${esc(c.newStatus)}${c.matchedBy ? ' (matched by name)' : ''}${(c.rulesStarted || []).length ? ' · started: ' + esc(c.rulesStarted.join(', ')) : ''}${(c.rulesStopped || []).length ? ' · stopped: ' + esc(c.rulesStopped.join(', ')) : ''}</div></div>`).join('');
+    if (r.rules.length) html += '<h4 style="margin-top:18px">Rules</h4>' + r.rules.map(c => `<div class="finding-detail">${esc(c.ruleId)}: ${esc(c.oldCount)} → ${esc(c.newCount)} VMs</div>`).join('');
+    if (r.added.length) html += '<h4 style="margin-top:18px">Added</h4>' + chips(r.added);
+    if (r.removed.length) html += '<h4 style="margin-top:18px">Removed</h4>' + chips(r.removed);
+    return html;
+  }
+
+  function runDiff() {
+    const out = $('diffResult'), f = $('diffFile').files[0];
+    if (!f) { out.innerHTML = '<div class="finding-detail">Choose a file first.</div>'; return; }
+    if (f.size > 8 * 1024 * 1024) { out.innerHTML = '<div class="finding-card blocker"><div class="finding-detail">That file is over the 8 MiB limit.</div></div>'; return; }
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        const res = await post('/api/v1/diff?failOn=' + encodeURIComponent($('diffGate').value), String(reader.result));
+        out.innerHTML = renderDiff(res);
+      } catch (e) {
+        out.innerHTML = `<div class="finding-card blocker"><div class="finding-title">Could not compare</div><div class="finding-detail">${esc(e.message)}</div></div>`;
+      }
+    };
+    reader.onerror = () => { out.innerHTML = '<div class="finding-detail">Could not read the file.</div>'; };
+    reader.readAsText(f);
+  }
+
+  function extras() {
+    renderEstate();
+    $('planValidate').addEventListener('click', runPlanCheck);
+    $('planDraft').addEventListener('click', async () => {
+      try { $('planInput').value = JSON.stringify(await get('/api/v1/plan/draft'), null, 2); }
+      catch (e) { $('planResult').innerHTML = `<div class="finding-detail">${esc(e.message)}</div>`; }
+    });
+    $('diffRun').addEventListener('click', runDiff);
   }
   boot();
 })();
